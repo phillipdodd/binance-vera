@@ -8,7 +8,7 @@ const STATES = {
     SHORT: "SHORT",
 };
 
-const Config = {
+const CONFIG = {
     DEFAULT_STATE: STATES.LONG,
     BUYIN: 50
 }
