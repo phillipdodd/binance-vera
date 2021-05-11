@@ -1,17 +1,11 @@
-class StateHandlers {
-    constructor(instance) {
-        this.instance = instance;
-        this.handlers = {
-            LONG: {
-                BUY: undefined,
-                SELL: undefined
-            },
+import Instance from "./Instance";
 
-            SHORT: {
-                BUY: undefined,
-                SELL: undefined
-            }
-        }
+export default class StateHandlers {
+    instance: Instance;
+    handlers!: { LONG: { BUY: Function; SELL: Function; }; SHORT: { BUY: Function; SELL: Function; }; };
+
+    constructor(instance: Instance) {
+        this.instance = instance;
     }
 
     async init() {
@@ -46,5 +40,3 @@ class StateHandlers {
         return handler;
     }
 }
-
-module.exports = StateHandlers;

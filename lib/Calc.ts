@@ -1,53 +1,48 @@
-const math = require("mathjs");
+import { BigNumber } from 'mathjs';
 const defaultFixedValue = 8;
 
-class Calc {
-    static add(x, y, toFixedValue = defaultFixedValue) {
+export default class Calc {
+    static add(x: any, y: any, toFixedValue = defaultFixedValue) {
         try {
             [x, y] = this.convertToBigNumbers(x, y);
             let result = x.add(y).toFixed(toFixedValue).valueOf();
-            // logger.debug(`Adding ${x.valueOf()} to ${y.valueOf()} for a result of ${result}`);
             return result;
         } catch (err) {
-            logger.error(`add: ${err.message}`);
-            throw error;
+            throw err;
         }
     }
 
-    static sub(x, y, toFixedValue = defaultFixedValue) {
+    static sub(x: any, y: any, toFixedValue = defaultFixedValue) {
         try {
             [x, y] = this.convertToBigNumbers(x, y);
             let result = x.sub(y).toFixed(toFixedValue).valueOf();
             // logger.debug(`Subtract ${x.valueOf()} to ${y.valueOf()} for a result of ${result}`);
             return result;
         } catch (err) {
-            logger.error(`sub: ${err.message}`);
             throw err;
         }
     }
 
-    static mul(x, y, toFixedValue = defaultFixedValue) {
+    static mul(x: any, y: any, toFixedValue = defaultFixedValue) {
         try {
             [x, y] = this.convertToBigNumbers(x, y);
             let result = x.mul(y).toFixed(toFixedValue).valueOf();
             return result;
         } catch (err) {
-            logger.error(`mul: ${err}`);
             throw err;
         }
     }
 
-    static div(x, y, toFixedValue = defaultFixedValue) {
+    static div(x: any, y: any, toFixedValue = defaultFixedValue) {
         try {
             [x, y] = this.convertToBigNumbers(x, y);
             let result = x.dividedBy(y).toFixed(toFixedValue).valueOf();
             return result;
         } catch (err) {
-            logger.error(`div: ${err.message}`);
             throw err;
         }
     }
-    static sum(...decimals) {
+    static sum(...decimals: any[]) {
         try {
             return this.convertToBigNumbers(...decimals)
                 .reduce((previous, current) => {
@@ -56,7 +51,6 @@ class Calc {
                 .toFixed(8)
                 .valueOf();
         } catch (err) {
-            logger.error(`sum: ${err.message}`);
             throw err;
         }
     }
@@ -136,5 +130,3 @@ class Calc {
         }
     }
 }
-
-module.exports = Calc;

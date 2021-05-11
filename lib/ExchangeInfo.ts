@@ -1,4 +1,4 @@
-class ExchangeInfo {
+export default class ExchangeInfo {
     constructor(client) {
         this.client = client;
         this.data = {};

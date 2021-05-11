@@ -9,7 +9,7 @@ const { STATES, CONFIG } = require("../constants.js");
 //todo replace with conf npm thing
 const defaultTickChangeNum = 3;
 
-class Instance {
+export default class Instance {
     /**
      *
      * @param {string} user
@@ -303,5 +303,3 @@ function correctTickAndStep(options) {
 
     return options;
 }
-
-module.exports = Instance;
