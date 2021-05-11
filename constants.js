@@ -10,7 +10,8 @@ const STATES = {
 
 const CONFIG = {
     DEFAULT_STATE: STATES.LONG,
-    BUYIN: 50
+    BUYIN: 50,
+    RELIST_TIME: 60_000
 }
 
-module.exports = { USERS, STATES }
+module.exports = { USERS, STATES, CONFIG };
