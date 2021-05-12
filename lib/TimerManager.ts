@@ -39,9 +39,7 @@ export default class TimerManager {
     public createPositionChangeTimer(orderId: string): void {
         const timer = setTimeout(() => {
             this.instance.toggleTradePosition();
-            if (this.activeTimers.has(orderId)) {
-                this.activeTimers.delete(orderId);
-            }
+            this.activeTimers.delete(orderId);
         }, this.positionChangeTime);
         this.activeTimers.set(orderId, timer);
     }
