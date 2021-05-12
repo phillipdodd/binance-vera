@@ -136,18 +136,18 @@ export default class Instance {
         return await this.client.accountInfo();
     }
 
-    async getRelistAskPrice(symbol: string, price: string, priceLastTrade: string) {
-        const incomingPrice = price || priceLastTrade;
+    async getRelistAskPrice(symbol: string, price: string, priceLastTrade?: string) : Promise<string> {
+        const incomingPrice = priceLastTrade || price;
         const increasedPrice = this.addTicks(symbol, incomingPrice, defaultTickChangeNum);
         const lowestAsk = await this.getLowestAsk(symbol);
-        return Math.max(+lowestAsk, +increasedPrice);
+        return Math.max(+lowestAsk, +increasedPrice).toString();
     }
 
-    async getRelistBidPrice(symbol: string, price: string, priceLastTrade: string) {
-        const incomingPrice = price || priceLastTrade;
+    async getRelistBidPrice(symbol: string, price: string, priceLastTrade?: string) : Promise<string> {
+        const incomingPrice = priceLastTrade || price;
         const decreasedPrice = this.subTicks(symbol, incomingPrice, defaultTickChangeNum);
         const highestBid = await this.getHighestBid(symbol);
-        return Math.min(+highestBid, +decreasedPrice);
+        return Math.min(+highestBid, +decreasedPrice).toString();
     }
 
     addTicks(symbol: string, price: string, numTicks = defaultTickChangeNum) {
@@ -177,8 +177,8 @@ export default class Instance {
         return orderBook;
     }
 
-    getOrderQuantity(price: string) {
-        return Calc.div(CONFIG.BUYIN, price);
+    getOrderQuantity(price: string): string {
+        return Calc.div(CONFIG.BUYIN, price).toString();
     }
 
     correctTickAndStep(options: NewOrder) {
