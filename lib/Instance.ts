@@ -1,7 +1,7 @@
 require("dotenv").config();
 
 import StateHandlers from "./StateHandlers";
-import ExchangeInfo from "./ExchangeInfo";
+import SimplifiedExchangeInfo from "./SimplifiedExchangeInfo";
 import Calc from "./Calc";
 const Binance = require("us-binance-api-node");
 
@@ -16,7 +16,7 @@ export default class Instance {
     private client;
     private state: State;
     private stateHandlers: StateHandlers;
-    private exchangeInfo: ExchangeInfo;
+    private exchangeInfo: SimplifiedExchangeInfo;
     private activeOrders: Map<number, State>;
     private websockets: any;
 
@@ -28,7 +28,7 @@ export default class Instance {
         });
         this.state = CONFIG.DEFAULT_STATE;
         this.stateHandlers = new StateHandlers(this.client);
-        this.exchangeInfo = new ExchangeInfo(this.client);
+        this.exchangeInfo = new SimplifiedExchangeInfo(this.client);
 
         // {orderId: stateName}
         this.activeOrders = new Map();
@@ -184,11 +184,11 @@ export default class Instance {
     correctTickAndStep(options: NewOrder) {
     //* Market orders will not be including a 'price' property
     if (options.hasOwnProperty("price")) {
-        options.price = Calc.roundToTickSize(options.price, this.exchangeInfo[options.symbol].tickSize);
+        options.price = Calc.roundToTickSize(options.price, this.exchangeInfo.getTickSize(options.symbol));
     }
 
     if (options.hasOwnProperty("quantity")) {
-        options.quantity = Calc.roundToStepSize(options.quantity, this.exchangeInfo[options.symbol].stepSize);
+        options.quantity = Calc.roundToStepSize(options.quantity, this.exchangeInfo.getStepSize(options.symbol));
     }
 
     return options;
