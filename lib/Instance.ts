@@ -43,7 +43,7 @@ export default class Instance {
         console.log("Instance initialized");
     }
 
-    toggleState(): void {
+    toggleTradePosition(): void {
         if (this.state === State.Long) {
             this.state = State.Short;
         } else {

@@ -1,3 +1,6 @@
+import { TradePosition, TradeSide } from "../constants";
+import Instance from "./Instance";
+
 //todo change language of 'state' to 'tradeposition'
 export default class TimerManager {
 
@@ -16,10 +19,10 @@ export default class TimerManager {
     }
 
     public shouldCreateRelistTimer(tradePosition: TradePosition, side: TradeSide): boolean {
-        if (tradePosition === TradePosition.LONG && side === TradeSide.BUY) {
+        if (tradePosition === TradePosition.Long && side === TradeSide.BUY) {
             return true;
         }
-        if (tradePosition === TradePosition.SHORT && side === TradeSide.SELL) {
+        if (tradePosition === TradePosition.Short && side === TradeSide.SELL) {
             return true;
         }
         return false;

@@ -8,6 +8,16 @@ export enum State {
     Short,
 };
 
+export enum TradePosition {
+    Long,
+    Short,
+};
+
+export enum TradeSide {
+    BUY,
+    SELL,
+};
+
 export const CONFIG = {
     DEFAULT_STATE: State.Long,
     BUYIN: 50,

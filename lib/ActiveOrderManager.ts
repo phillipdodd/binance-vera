@@ -1,6 +1,7 @@
+import { TradePosition, TradeSide } from "../constants";
+import Instance from "./Instance";
 import TimerManager from "./TimerManager";
 
-//todo change language of 'state' to 'tradeposition'
 export default class ActiveOrderManager {
 
     private activeOrders: Map<string, TradePosition>;
