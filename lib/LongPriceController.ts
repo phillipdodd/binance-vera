@@ -8,15 +8,15 @@ class LongPriceController extends PriceController  {
         super(instance);
     }
 
-    async handleBuy(ex: ExecutionReport): Promise<PriceData> {
-        const price = await this.instance.getHighestBid(ex.symbol);
+    async handleBuy(ex: Partial<ExecutionReport>): Promise<PriceData> {
+        const price = await this.instance.getHighestBid(<string>ex.symbol);
         const quantity = this.instance.getOrderQuantity(price);
         return { price, quantity };
     }
 
-    async handleSell(ex: ExecutionReport): Promise<PriceData> {
-        const price = await this.instance.getRelistAskPrice(ex.symbol, ex.price, ex.priceLastTrade);
-        const quantity = ex.quantity;
+    async handleSell(ex: Partial<ExecutionReport>): Promise<PriceData> {
+        const price = await this.instance.getRelistAskPrice(<string>ex.symbol, <string>ex.price, ex.priceLastTrade);
+        const quantity = <string>ex.quantity;
         return { price, quantity };
     }
 }

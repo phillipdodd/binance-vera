@@ -15,8 +15,8 @@ abstract class PriceController {
         }
     }
 
-    abstract handleBuy(ex: ExecutionReport): Promise<PriceData>;
-    abstract handleSell(ex: ExecutionReport): Promise<PriceData>;
+    abstract handleBuy(ex: Partial<ExecutionReport>): Promise<PriceData>;
+    abstract handleSell(ex: Partial<ExecutionReport>): Promise<PriceData>;
 }
 
 type PriceData = {
@@ -25,7 +25,7 @@ type PriceData = {
 }
 
 interface IPriceHandler {
-    (ex: ExecutionReport): Promise<PriceData>;
+    (ex: Partial<ExecutionReport>): Promise<PriceData>;
 }
 
 export { PriceController, PriceData };
