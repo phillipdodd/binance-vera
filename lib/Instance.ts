@@ -1,13 +1,14 @@
 require("dotenv").config();
 
-import StateHandlers from "./StateHandlers";
 import SimplifiedExchangeInfo from "./SimplifiedExchangeInfo";
 import Calc from "./Calc";
 const Binance = require("us-binance-api-node");
 
 import { User, TradePosition, CONFIG } from "../constants"
 import { ExecutionReport, NewOrder, OrderSide, OutboundAccountInfo } from "us-binance-api-node";
-
+import { PriceController } from "./PriceController";
+import LongPriceController from "./LongPriceController"
+import ShortPriceController from "./ShortPriceController";
 //todo replace with conf npm thing
 const defaultTickChangeNum = 3;
 
@@ -15,7 +16,7 @@ export default class Instance {
     
     private client;
     private tradePosition: TradePosition;
-    private stateHandlers: StateHandlers;
+    private priceControllers: Map<TradePosition, PriceController>;
     private exchangeInfo: SimplifiedExchangeInfo;
     private activeOrders: Map<number, TradePosition>;
     private websockets: any;
@@ -26,9 +27,13 @@ export default class Instance {
             apiSecret: <string>process.env[`API_SECRET_${user}`],
             getTime: Date.now,
         });
+
         this.tradePosition = CONFIG.DEFAULT_STATE;
-        this.stateHandlers = new StateHandlers(this.client);
         this.exchangeInfo = new SimplifiedExchangeInfo(this.client);
+
+        this.priceControllers = new Map();
+        this.priceControllers.set(TradePosition.Long, new LongPriceController(this));
+        this.priceControllers.set(TradePosition.Short, new ShortPriceController(this));
 
         // {orderId: stateName}
         this.activeOrders = new Map();
@@ -37,13 +42,12 @@ export default class Instance {
 
     async init() {
         await this.exchangeInfo.init();
-        await this.stateHandlers.init();
         await this.startWebsocket();
 
         console.log("Instance initialized");
     }
 
-    toggleTradePosition(): void {
+    toggleTradePosition() {
         if (this.tradePosition === TradePosition.Long) {
             this.tradePosition = TradePosition.Short;
         } else {
@@ -62,11 +66,12 @@ export default class Instance {
     //todo make order type
     async relistLimitOrder(executionReport: ExecutionReport) {
         const { symbol, orderId, side } = executionReport;
-        const forState = this.getStateOrderPlacedIn(orderId);
+        const forPosition = this.getPositionOrderPlacedIn(orderId);
         const relistSide = reverseSide(side);
 
-        const handler = this.stateHandlers.getHandler(forState, relistSide);
-        const { price, quantity } = handler(executionReport);
+        const priceController = <PriceController>this.priceControllers.get(forPosition);
+        const handler = priceController.getHandler(relistSide);
+        const { price, quantity } = await handler(executionReport);
 
         const relistOrder = await this.placeOrder({
             symbol,
@@ -94,15 +99,16 @@ export default class Instance {
         }, CONFIG.RELIST_TIME);
     }
 
-    getStateOrderPlacedIn(orderId: number) {
+    getPositionOrderPlacedIn(orderId: number) {
         const state = this.activeOrders.get(orderId);
         return state || this.tradePosition;
     }
 
     async placeInitOrder(symbol: string, forPosition: TradePosition) {
-        const initSide: string = getInitOrderSide(forPosition);
-        const handler = this.stateHandlers.getHandler(forPosition, initSide);
-        const { price, quantity } = handler({ symbol });
+        const initSide = getInitOrderSide(forPosition);
+        const priceController = <PriceController>this.priceControllers.get(forPosition);
+        const handler = priceController.getHandler(initSide);
+        const { price, quantity } = await handler({ symbol });
         const initOrder = await this.placeOrder({
             symbol,
             quantity,
@@ -199,13 +205,17 @@ function reverseSide(orderSide: OrderSide) {
     if (orderSide != "BUY" && orderSide != "SELL") {
         throw new Error(`${orderSide} is not a valid order side`);
     }
-    if (orderSide === "BUY") return "SELL";
-    if (orderSide === "SELL") return "BUY";
+    if (orderSide === "BUY") {
+        return "SELL";
+    } else {
+        return "BUY"
+    }
 }
 
-function getInitOrderSide(position: TradePosition): string {
-    let orderSide = "";
-    if (position === TradePosition.Long)  orderSide = "BUY";
-    if (position === TradePosition.Short) orderSide = "SELL";
-    return orderSide;
+function getInitOrderSide(position: TradePosition): OrderSide {
+    if (position === TradePosition.Short) {
+        return "SELL";
+    } else {
+        return "BUY";
+    }
 }
