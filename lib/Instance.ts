@@ -1,26 +1,32 @@
 require("dotenv").config();
-// @ts-ignore
+
+import StateHandlers from "./StateHandlers";
+import ExchangeInfo from "./ExchangeInfo";
+import Calc from "./Calc";
 const Binance = require("us-binance-api-node");
-const ExchangeInfo = require("./ExchangeInfo.js");
-const StateHandlers = require('./StateHandlers.js');
-const Calc = require("./Calc.js");
-const { STATES, CONFIG } = require("../constants.js");
+
+import { User, State, CONFIG } from "../constants"
+import { ExecutionReport, NewOrder, OrderStatus, OrderSide, OutboundAccountInfo } from "us-binance-api-node";
 
 //todo replace with conf npm thing
 const defaultTickChangeNum = 3;
 
 export default class Instance {
-    /**
-     *
-     * @param {string} user
-     */
-    constructor(user) {
+    
+    private client;
+    private state: State;
+    private stateHandlers: StateHandlers;
+    private exchangeInfo: ExchangeInfo;
+    private activeOrders: Map<number, State>;
+    private websockets: any;
+
+    constructor(user: User) {
         this.client = Binance.default({
-            apiKey: process.env[`API_KEY_${user}`],
-            apiSecret: process.env[`API_SECRET_${user}`],
+            apiKey:    <string>process.env[`API_KEY_${user}`],
+            apiSecret: <string>process.env[`API_SECRET_${user}`],
             getTime: Date.now,
         });
-        this.state = STATES[CONFIG.defaultState];
+        this.state = CONFIG.DEFAULT_STATE;
         this.stateHandlers = new StateHandlers(this.client);
         this.exchangeInfo = new ExchangeInfo(this.client);
 
@@ -37,28 +43,24 @@ export default class Instance {
         console.log("Instance initialized");
     }
 
-    toggleState() {
-        if (this.state === STATES.LONG) {
-            this.state = STATES.SHORT;
+    toggleState(): void {
+        if (this.state === State.Long) {
+            this.state = State.Short;
         } else {
-            this.state = STATES.LONG;
+            this.state = State.Long;
         }
     }
 
-    async startWebsocket() {
-        this.websockets.user = this.client.user((eventData) => {
-            if (eventData.orderStatus === "FILLED") {
-                this.relistLimitOrder(eventData);
+    async startWebsocket(): Promise<void> {
+        this.websockets.user = this.client.user((eventData: OutboundAccountInfo | ExecutionReport) => {
+            if ((eventData as ExecutionReport).orderStatus) {
+                this.relistLimitOrder(eventData as ExecutionReport);
             }
         });
     }
 
-    /**
-     *
-     * @param {Object} executionReport
-     * @returns {Promise<Object>}
-     */
-    async relistLimitOrder(executionReport) {
+    //todo make order type
+    async relistLimitOrder(executionReport: ExecutionReport) {
         const { symbol, orderId, side } = executionReport;
         const forState = this.getStateOrderPlacedIn(orderId);
         const relistSide = reverseSide(side);
@@ -70,8 +72,8 @@ export default class Instance {
             symbol,
             quantity,
             price,
+            side: <OrderSide>relistSide,
             type: "LIMIT",
-            side: relistSide,
         });
 
         this.activeOrders.set(relistOrder.orderId, this.state);
@@ -82,12 +84,7 @@ export default class Instance {
         return relistOrder;
     }
 
-    /**
-     *
-     * @param {string} symbol
-     * @param {string} orderId
-     */
-    createTimerForOrder(symbol, orderId) {
+    createTimerForOrder(symbol: string, orderId: number) {
         setTimeout(async () => {
             const forState = this.activeOrders.get(orderId);
             if (forState) {
@@ -97,31 +94,20 @@ export default class Instance {
         }, CONFIG.RELIST_TIME);
     }
 
-    /**
-     *
-     * @param {string} orderId
-     * @returns {string} LONG | SHORT
-     */
-    getStateOrderPlacedIn(orderId) {
+    getStateOrderPlacedIn(orderId: number) {
         const state = this.activeOrders.get(orderId);
         return state || this.state;
     }
 
-    /**
-     *
-     * @param {string} symbol
-     * @param {string} forState
-     * @returns {Promise<Object>}
-     */
-    async placeInitOrder(symbol, forState) {
-        const initSide = getInitOrderSide(forState);
+    async placeInitOrder(symbol: string, forState: State) {
+        const initSide: string = getInitOrderSide(forState);
         const handler = this.stateHandlers.getHandler(forState, initSide);
         const { price, quantity } = handler({ symbol });
         const initOrder = await this.placeOrder({
             symbol,
             quantity,
             price,
-            side: initSide,
+            side: <OrderSide>initSide,
             type: "LIMIT",
         });
 
@@ -131,167 +117,71 @@ export default class Instance {
         return initOrder;
     }
 
-    /**
-     *
-     * @param {Object} options
-     * @returns {Promise<Object>}
-     */
-    async placeOrder(options) {
-        const correctedOptions = correctTickAndStep(options);
+    async placeOrder(options: NewOrder) {
+        const correctedOptions: NewOrder = this.correctTickAndStep(options);
         const order = await this.client.order(correctedOptions);
         return order;
     }
 
-    /**
-     *
-     * @param {string} symbol
-     * @param {string} orderId
-     */
-    async cancelOrder(symbol, orderId) {
+    async cancelOrder(symbol: string, orderId: number) {
         await this.client.cancelOrder({ symbol, orderId });
         this.activeOrders.delete(orderId);
     }
 
-    /**
-     *
-     * @param {string} symbol
-     * @returns {Promise<Object[]>}
-     */
-    async getOpenOrders(symbol) {
+    async getOpenOrders(symbol: string) {
         return await this.client.openOrders({ symbol });
     }
 
-    /**
-     *
-     * @returns {Promise<Object[]>}
-     */
     async getAccountBalances() {
         return await this.client.accountInfo();
     }
 
-    /**
-     *
-     * @param {string} symbol
-     * @param {string} price
-     * @param {string} priceLastTrade - only found in Market orders
-     * @returns
-     */
-    async getRelistAskPrice(symbol, price, priceLastTrade) {
+    async getRelistAskPrice(symbol: string, price: string, priceLastTrade: string) {
         const incomingPrice = price || priceLastTrade;
         const increasedPrice = this.addTicks(symbol, incomingPrice, defaultTickChangeNum);
         const lowestAsk = await this.getLowestAsk(symbol);
         return Math.max(+lowestAsk, +increasedPrice);
     }
 
-    /**
-     *
-     * @param {string} symbol
-     * @param {string} price
-     * @param {string} priceLastTrade - only found in Market orders
-     * @returns {Promise<number>}
-     */
-    async getRelistBidPrice(symbol, price, priceLastTrade) {
+    async getRelistBidPrice(symbol: string, price: string, priceLastTrade: string) {
         const incomingPrice = price || priceLastTrade;
         const decreasedPrice = this.subTicks(symbol, incomingPrice, defaultTickChangeNum);
         const highestBid = await this.getHighestBid(symbol);
         return Math.min(+highestBid, +decreasedPrice);
     }
 
-    /**
-     *
-     * @param {string} symbol
-     * @param {string} price
-     * @param {number} [numTicks=defaultTickChangeNum]
-     * @returns {number}
-     */
-    addTicks(symbol, price, numTicks = defaultTickChangeNum) {
+    addTicks(symbol: string, price: string, numTicks = defaultTickChangeNum) {
         const tickSize = this.exchangeInfo.getTickSize(symbol);
         const increaseAmount = Calc.mul(tickSize, numTicks);
         return Calc.add(price, increaseAmount);
     }
 
-    /**
-     *
-     * @param {string} symbol
-     * @param {string} price
-     * @param {number} [numTicks=defaultTickChangeNum]
-     * @returns {number}
-     */
-    subTicks(symbol, price, numTicks = defaultTickChangeNum) {
+    subTicks(symbol: string, price: string, numTicks = defaultTickChangeNum) {
         const tickSize = this.exchangeInfo.getTickSize(symbol);
         const decreaseAmount = Calc.mul(tickSize, numTicks);
         return Calc.sub(price, decreaseAmount);
     }
 
-    /**
-     *
-     * @param {string} symbol
-     * @returns {Promise<number>}
-     */
-    async getLowestAsk(symbol) {
+    async getLowestAsk(symbol: string) {
         const orderBook = await this.getOrderBook(symbol);
         return orderBook.asks[0].price;
     }
 
-    /**
-     *
-     * @param {string} symbol
-     * @returns {Promise<number>}
-     */
-    async getHighestBid(symbol) {
+    async getHighestBid(symbol: string) {
         const orderBook = await this.getOrderBook(symbol);
         return orderBook.bids[0].price;
     }
 
-    /**
-     *
-     * @param {string} symbol
-     * @returns {Promise<Object>}
-     */
-    async getOrderBook(symbol) {
+    async getOrderBook(symbol: string) {
         const orderBook = await this.client.book({ symbol });
         return orderBook;
     }
 
-    /**
-     *
-     * @param {number} price
-     * @returns {number}
-     */
-    getOrderQuantity(price) {
+    getOrderQuantity(price: string) {
         return Calc.div(CONFIG.BUYIN, price);
     }
-}
 
-/**
- * 
- * @param {string} side 
- * @returns {string} SELL | BUY
- */
-function reverseSide(side) {
-    if (side != "BUY" && side != "SELL") {
-        throw new Error(`${side} is not a valid order side`);
-    }
-    if (side === "BUY") return "SELL";
-    if (side === "SELL") return "BUY";
-}
-
-/**
- * 
- * @param {string} state - LONG | SHORT
- * @returns {string} BUY | SELL
- */
-function getInitOrderSide(state) {
-    if (state === STATES.LONG) return "BUY";
-    if (state === STATES.SHORT) return "SELL";
-}
-
-/**
- * 
- * @param {Object} options 
- * @returns {Object}
- */
-function correctTickAndStep(options) {
+    correctTickAndStep(options: NewOrder) {
     //* Market orders will not be including a 'price' property
     if (options.hasOwnProperty("price")) {
         options.price = Calc.roundToTickSize(options.price, this.exchangeInfo[options.symbol].tickSize);
@@ -302,4 +192,20 @@ function correctTickAndStep(options) {
     }
 
     return options;
+}
+}
+
+function reverseSide(orderSide: OrderSide) {
+    if (orderSide != "BUY" && orderSide != "SELL") {
+        throw new Error(`${orderSide} is not a valid order side`);
+    }
+    if (orderSide === "BUY") return "SELL";
+    if (orderSide === "SELL") return "BUY";
+}
+
+function getInitOrderSide(state: State): string {
+    let orderSide = "";
+    if (state === State.Long)  orderSide = "BUY";
+    if (state === State.Short) orderSide = "SELL";
+    return orderSide;
 }
