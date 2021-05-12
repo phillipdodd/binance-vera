@@ -1,14 +1,11 @@
-import { ExecutionReport } from "us-binance-api-node";
-import IPriceController from "../interfaces/IPriceController";
-import PriceData from "../types/PriceData";
+import { ExecutionReport, OrderSide } from "us-binance-api-node";
+import { PriceController, PriceData } from "./PriceController";
 import Instance from "./Instance";
 
-class LongPriceController implements IPriceController {
-
-    private instance: Instance;
+class LongPriceController extends PriceController  {
 
     constructor(instance: Instance) {
-        this.instance = instance;
+        super(instance);
     }
 
     async handleBuy(ex: ExecutionReport): Promise<PriceData> {

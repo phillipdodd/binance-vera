@@ -1,25 +1,22 @@
-import { ExecutionReport } from "us-binance-api-node";
-import IPriceController from "../interfaces/IPriceController";
-import PriceData from "../types/PriceData";
+import { ExecutionReport, OrderSide } from "us-binance-api-node";
 import Instance from "./Instance";
+import { PriceController, PriceData } from "./PriceController";
 
-class ShortPriceController implements IPriceController {
+class ShortPriceController extends PriceController {
     
-    private instance: Instance;
-
     constructor(instance: Instance) {
-        this.instance = instance;
+        super(instance);
     }
-    
+
     async handleBuy(ex: ExecutionReport): Promise<PriceData> {
-        const price = await this.instance.getRelistBidPrice(ex.symbol, ex.price, ex.priceLastTrade);
-        const quantity = ex.quantity;
+        const price = await this.instance.getHighestBid(ex.symbol);
+        const quantity = this.instance.getOrderQuantity(price);
         return { price, quantity };
     }
-    
+
     async handleSell(ex: ExecutionReport): Promise<PriceData> {
-        const price = await this.instance.getLowestAsk(ex.symbol);
-        const quantity = this.instance.getOrderQuantity(price);
+        const price = await this.instance.getRelistAskPrice(ex.symbol, ex.price, ex.priceLastTrade);
+        const quantity = ex.quantity;
         return { price, quantity };
     }
     
