@@ -5,8 +5,8 @@ import SimplifiedExchangeInfo from "./SimplifiedExchangeInfo";
 import Calc from "./Calc";
 const Binance = require("us-binance-api-node");
 
-import { User, State, CONFIG } from "../constants"
-import { ExecutionReport, NewOrder, OrderStatus, OrderSide, OutboundAccountInfo } from "us-binance-api-node";
+import { User, TradePosition, CONFIG } from "../constants"
+import { ExecutionReport, NewOrder, OrderSide, OutboundAccountInfo } from "us-binance-api-node";
 
 //todo replace with conf npm thing
 const defaultTickChangeNum = 3;
@@ -14,10 +14,10 @@ const defaultTickChangeNum = 3;
 export default class Instance {
     
     private client;
-    private state: State;
+    private tradePosition: TradePosition;
     private stateHandlers: StateHandlers;
     private exchangeInfo: SimplifiedExchangeInfo;
-    private activeOrders: Map<number, State>;
+    private activeOrders: Map<number, TradePosition>;
     private websockets: any;
 
     constructor(user: User) {
@@ -26,7 +26,7 @@ export default class Instance {
             apiSecret: <string>process.env[`API_SECRET_${user}`],
             getTime: Date.now,
         });
-        this.state = CONFIG.DEFAULT_STATE;
+        this.tradePosition = CONFIG.DEFAULT_STATE;
         this.stateHandlers = new StateHandlers(this.client);
         this.exchangeInfo = new SimplifiedExchangeInfo(this.client);
 
@@ -44,10 +44,10 @@ export default class Instance {
     }
 
     toggleTradePosition(): void {
-        if (this.state === State.Long) {
-            this.state = State.Short;
+        if (this.tradePosition === TradePosition.Long) {
+            this.tradePosition = TradePosition.Short;
         } else {
-            this.state = State.Long;
+            this.tradePosition = TradePosition.Long;
         }
     }
 
@@ -76,7 +76,7 @@ export default class Instance {
             type: "LIMIT",
         });
 
-        this.activeOrders.set(relistOrder.orderId, this.state);
+        this.activeOrders.set(relistOrder.orderId, this.tradePosition);
         this.activeOrders.delete(executionReport.orderId);
 
         await this.createTimerForOrder(symbol, relistOrder.orderId);
@@ -96,12 +96,12 @@ export default class Instance {
 
     getStateOrderPlacedIn(orderId: number) {
         const state = this.activeOrders.get(orderId);
-        return state || this.state;
+        return state || this.tradePosition;
     }
 
-    async placeInitOrder(symbol: string, forState: State) {
-        const initSide: string = getInitOrderSide(forState);
-        const handler = this.stateHandlers.getHandler(forState, initSide);
+    async placeInitOrder(symbol: string, forPosition: TradePosition) {
+        const initSide: string = getInitOrderSide(forPosition);
+        const handler = this.stateHandlers.getHandler(forPosition, initSide);
         const { price, quantity } = handler({ symbol });
         const initOrder = await this.placeOrder({
             symbol,
@@ -111,7 +111,7 @@ export default class Instance {
             type: "LIMIT",
         });
 
-        this.activeOrders.set(initOrder.orderId, forState);
+        this.activeOrders.set(initOrder.orderId, forPosition);
         await this.createTimerForOrder(symbol, initOrder.orderId);
 
         return initOrder;
@@ -203,9 +203,9 @@ function reverseSide(orderSide: OrderSide) {
     if (orderSide === "SELL") return "BUY";
 }
 
-function getInitOrderSide(state: State): string {
+function getInitOrderSide(position: TradePosition): string {
     let orderSide = "";
-    if (state === State.Long)  orderSide = "BUY";
-    if (state === State.Short) orderSide = "SELL";
+    if (position === TradePosition.Long)  orderSide = "BUY";
+    if (position === TradePosition.Short) orderSide = "SELL";
     return orderSide;
 }

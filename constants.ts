@@ -3,11 +3,6 @@ export enum User {
     Tom,
 }
 
-export enum State {
-    Long,
-    Short,
-};
-
 export enum TradePosition {
     Long,
     Short,
@@ -19,7 +14,7 @@ export enum TradeSide {
 };
 
 export const CONFIG = {
-    DEFAULT_STATE: State.Long,
+    DEFAULT_STATE: TradePosition.Long,
     BUYIN: 50,
     RELIST_TIME: 60_000,
     DEFAULT_TO_FIXED: 8
