@@ -23,3 +23,5 @@ class LongPriceController implements IPriceController {
         return { price, quantity };
     }
 }
+
+export default LongPriceController;

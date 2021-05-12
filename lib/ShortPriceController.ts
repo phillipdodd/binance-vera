@@ -24,3 +24,5 @@ class ShortPriceController implements IPriceController {
     }
     
 }
+
+export default ShortPriceController;
