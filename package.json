@@ -21,6 +21,6 @@
   },
   "dependencies": {
     "mathjs": "^9.3.2",
-    "us-binance-api-node": "^0.9.10"
+    "us-binance-api-node": "0.9.10"
   }
 }
