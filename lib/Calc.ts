@@ -1,46 +1,46 @@
 import math, { BigNumber } from 'mathjs';
-const defaultFixedValue = 8;
-
+import { CONFIG } from "../constants";
 export default class Calc {
-    static add(x: any, y: any, toFixedValue = defaultFixedValue) {
+    static add(x: any, y: any, toFixedValue = CONFIG.DEFAULT_TO_FIXED) {
         try {
             [x, y] = this.convertToBigNumbers(x, y);
-            let result = x.add(y).toFixed(toFixedValue).valueOf();
+            let result = (x as BigNumber).add(y).toFixed(toFixedValue).valueOf();
             return result;
         } catch (err) {
             throw err;
         }
     }
 
-    static sub(x: any, y: any, toFixedValue = defaultFixedValue) {
+    static sub(x: any, y: any, toFixedValue = CONFIG.DEFAULT_TO_FIXED) {
         try {
             [x, y] = this.convertToBigNumbers(x, y);
-            let result = x.sub(y).toFixed(toFixedValue).valueOf();
+            let result = (x as BigNumber).sub(y).toFixed(toFixedValue).valueOf();
             return result;
         } catch (err) {
             throw err;
         }
     }
 
-    static mul(x: any, y: any, toFixedValue = defaultFixedValue) {
+    static mul(x: any, y: any, toFixedValue = CONFIG.DEFAULT_TO_FIXED) {
         try {
             [x, y] = this.convertToBigNumbers(x, y);
-            let result = x.mul(y).toFixed(toFixedValue).valueOf();
+            let result = (x as BigNumber).mul(y).toFixed(toFixedValue).valueOf();
             return result;
         } catch (err) {
             throw err;
         }
     }
 
-    static div(x: any, y: any, toFixedValue = defaultFixedValue) {
+    static div(x: any, y: any, toFixedValue = CONFIG.DEFAULT_TO_FIXED) {
         try {
             [x, y] = this.convertToBigNumbers(x, y);
-            let result = x.dividedBy(y).toFixed(toFixedValue).valueOf();
+            let result = (x as BigNumber).dividedBy(y).toFixed(toFixedValue).valueOf();
             return result;
         } catch (err) {
             throw err;
         }
     }
+    
     static sum(...decimals: any[]) {
         try {
             return this.convertToBigNumbers(...decimals)
@@ -62,20 +62,20 @@ export default class Calc {
         }
     }
 
-    static increaseByPercentage(decimal: any, percentage: any, toFixedValue = defaultFixedValue) {
+    static increaseByPercentage(decimal: any, percentage: any, toFixedValue = CONFIG.DEFAULT_TO_FIXED) {
         try {
             [decimal, percentage] = this.convertToBigNumbers(decimal, percentage);
-            let result = decimal.mul(percentage).toFixed(toFixedValue).valueOf();
+            let result = (decimal as BigNumber).mul(percentage).toFixed(toFixedValue).valueOf();
             return result;
         } catch (err) {
             throw err;
         }
     }
 
-    static decreaseByPercentage(decimal: any, percentage: any, toFixedValue = defaultFixedValue) {
+    static decreaseByPercentage(decimal: any, percentage: any, toFixedValue = CONFIG.DEFAULT_TO_FIXED) {
         try {
             [decimal, percentage] = this.convertToBigNumbers(decimal, percentage);
-            let result = decimal.dividedBy(percentage).toFixed(toFixedValue).valueOf();
+            let result = (decimal as BigNumber).dividedBy(percentage).toFixed(toFixedValue).valueOf();
             return result;
         } catch (err) {
             throw err;
@@ -85,7 +85,7 @@ export default class Calc {
     static roundToTickSize(decimal: any, tickSize: any) {
         try {
             [decimal, tickSize] = this.convertToBigNumbers(decimal, tickSize);
-            return decimal.sub(decimal.mod(tickSize)).valueOf();
+            return (decimal as BigNumber).sub(decimal.mod(tickSize)).valueOf();
         } catch (err) {
             throw err;
         }
@@ -94,7 +94,7 @@ export default class Calc {
     static roundToStepSize(decimal: any, stepSize: any) {
         try {
             [decimal, stepSize] = this.convertToBigNumbers(decimal, stepSize);
-            return decimal.toFixed(Math.abs(stepSize.e));
+            return (decimal as BigNumber).toFixed(Math.abs(stepSize.e));
         } catch (err) {
             throw err;
         }
@@ -109,7 +109,7 @@ export default class Calc {
         }
     }
 
-    static convertToBigNumbers(...args: any[]) {
+    static convertToBigNumbers(...args: any) {
         try {
             return [...args].map((value) => {
                 return math.bignumber(value);
