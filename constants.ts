@@ -21,5 +21,6 @@ export enum TradeSide {
 export const CONFIG = {
     DEFAULT_STATE: State.Long,
     BUYIN: 50,
-    RELIST_TIME: 60_000
+    RELIST_TIME: 60_000,
+    DEFAULT_TO_FIXED: 8
 }
