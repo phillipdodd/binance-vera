@@ -18,11 +18,12 @@ export default class TimerManager {
         this.positionChangeTime = 120_000;
     }
 
+    //todo get rid of if statements using a dict or something
     public shouldCreateRelistTimer(tradePosition: TradePosition, side: TradeSide): boolean {
-        if (tradePosition === TradePosition.Long && side === TradeSide.BUY) {
+        if (tradePosition === TradePosition.Long && side === TradeSide.Buy) {
             return true;
         }
-        if (tradePosition === TradePosition.Short && side === TradeSide.SELL) {
+        if (tradePosition === TradePosition.Short && side === TradeSide.Sell) {
             return true;
         }
         return false;
