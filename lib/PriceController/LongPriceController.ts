@@ -1,7 +1,7 @@
 import { ExecutionReport, OrderSide } from "us-binance-api-node";
 import { PriceController, PriceData } from "./PriceController";
-import Instance from "./Instance";
-import SimplifiedExchangeInfo from "./SimplifiedExchangeInfo";
+import Instance from "../Instance";
+import SimplifiedExchangeInfo from "../SimplifiedExchangeInfo";
 
 class LongPriceController extends PriceController  {
 

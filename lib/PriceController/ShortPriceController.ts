@@ -1,5 +1,5 @@
 import { ExecutionReport, OrderSide } from "us-binance-api-node";
-import Instance from "./Instance";
+import Instance from "../Instance";
 import { PriceController, PriceData } from "./PriceController";
 
 class ShortPriceController extends PriceController {

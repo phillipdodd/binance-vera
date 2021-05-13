@@ -1,7 +1,7 @@
 import { ExecutionReport, OrderSide } from "us-binance-api-node";
-import { CONFIG, DEFAULTS } from "../constants";
-import Calc from "./Calc";
-import Instance from "./Instance";
+import { CONFIG, DEFAULTS } from "../../constants";
+import Calc from "../Calc";
+import Instance from "../Instance";
 abstract class PriceController {
     constructor(
         protected instance: Instance
