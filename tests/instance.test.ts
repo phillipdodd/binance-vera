@@ -8,11 +8,6 @@ describe('success', () => {
         const didInit = await instance.init();
         expect(didInit).toBe(true);
     });
-
-    it('can close opened websocket', () => {
-        instance.closeAllWebsockets();
-        expect(instance.getWebsocketCloserCount()).toBe(0);
-    });
 });
 
 // describe('fail', () => {

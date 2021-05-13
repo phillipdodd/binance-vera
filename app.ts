@@ -17,5 +17,4 @@ class App {
 const app = new App(User.Phil);
 (async () => {
     await app.init();
-    app.instance.closeAllWebsockets();
 })()
