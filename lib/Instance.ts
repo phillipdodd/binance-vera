@@ -23,8 +23,8 @@ export default class Instance {
 
     constructor(user: User) {
         this.client = Binance.default({
-            apiKey:    <string>process.env[`API_KEY_${user}`],
-            apiSecret: <string>process.env[`API_SECRET_${user}`],
+            apiKey: process.env[`API_KEY_${user}`],
+            apiSecret: process.env[`API_SECRET_${user}`],
             getTime: Date.now,
         });
 
