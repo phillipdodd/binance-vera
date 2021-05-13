@@ -1,10 +1,10 @@
-require("dotenv").config();
+import 'dotenv/config'
 
 import SimplifiedExchangeInfo from "./SimplifiedExchangeInfo";
 import Calc from "./Calc";
 
 const Binance = require("us-binance-api-node");
-import { ExecutionReport, NewOrder, OrderSide, OutboundAccountInfo } from "us-binance-api-node";
+import { ExecutionReport, NewOrder, OrderSide, OutboundAccountInfo, WebSocket } from "us-binance-api-node";
 import { PriceController } from "./PriceController";
 import LongPriceController from "./LongPriceController"
 import ShortPriceController from "./ShortPriceController";
@@ -17,7 +17,7 @@ export default class Instance {
     private priceControllers: Map<TradePosition, PriceController>;
     private exchangeInfo: SimplifiedExchangeInfo;
     private activeOrders: Map<number, TradePosition>;
-    private websockets: any;
+    private websockets: Map<string, WebSocket>;
 
     constructor(user: User) {
         this.client = Binance.default({
@@ -35,14 +35,15 @@ export default class Instance {
 
         // {orderId: stateName}
         this.activeOrders = new Map();
-        this.websockets = {};
+        this.websockets = new Map();
     }
 
-    async init() {
+    async init(): Promise<boolean> {
         await this.exchangeInfo.init();
         await this.startWebsocket();
 
         console.log("Instance initialized");
+        return true;
     }
 
     toggleTradePosition() {
@@ -54,11 +55,13 @@ export default class Instance {
     }
 
     async startWebsocket(): Promise<void> {
-        this.websockets.user = this.client.user((eventData: OutboundAccountInfo | ExecutionReport) => {
-            if ((eventData as ExecutionReport).orderStatus === 'FILLED') {
-                this.relistLimitOrder(eventData as ExecutionReport);
-            }
-        });
+        const userCallback = (eventData: OutboundAccountInfo | ExecutionReport) => {
+            // if ((eventData as ExecutionReport).orderStatus === 'FILLED') {
+            //     this.relistLimitOrder(eventData as ExecutionReport);
+            // }
+        };
+        const userWebsocket = await this.client.ws.user(userCallback);
+        this.websockets.set('user', userWebsocket);
     }
 
     async relistLimitOrder(executionReport: ExecutionReport) {
