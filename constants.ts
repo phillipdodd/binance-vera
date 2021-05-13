@@ -14,8 +14,12 @@ export enum TradeSide {
 };
 
 export const CONFIG = {
-    DEFAULT_STATE: TradePosition.Long,
     BUYIN: 50,
     RELIST_TIME: 60_000,
-    DEFAULT_TO_FIXED: 8
+}
+
+export const DEFAULTS = {
+    TRADE_POSITION: TradePosition.Long,
+    TO_FIXED_PRECISION: 8,
+    NUM_TICKS_CHANGED: 3
 }

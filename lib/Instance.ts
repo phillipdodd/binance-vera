@@ -2,15 +2,13 @@ require("dotenv").config();
 
 import SimplifiedExchangeInfo from "./SimplifiedExchangeInfo";
 import Calc from "./Calc";
-const Binance = require("us-binance-api-node");
 
-import { User, TradePosition, CONFIG } from "../constants"
+const Binance = require("us-binance-api-node");
 import { ExecutionReport, NewOrder, OrderSide, OutboundAccountInfo } from "us-binance-api-node";
 import { PriceController } from "./PriceController";
 import LongPriceController from "./LongPriceController"
 import ShortPriceController from "./ShortPriceController";
-//todo replace with conf npm thing
-const defaultTickChangeNum = 3;
+import { User, TradePosition, CONFIG, DEFAULTS } from "../constants"
 
 export default class Instance {
     
@@ -28,7 +26,7 @@ export default class Instance {
             getTime: Date.now,
         });
 
-        this.tradePosition = CONFIG.DEFAULT_STATE;
+        this.tradePosition = DEFAULTS.TRADE_POSITION;
         this.exchangeInfo = new SimplifiedExchangeInfo(this.client);
 
         this.priceControllers = new Map();
@@ -57,13 +55,12 @@ export default class Instance {
 
     async startWebsocket(): Promise<void> {
         this.websockets.user = this.client.user((eventData: OutboundAccountInfo | ExecutionReport) => {
-            if ((eventData as ExecutionReport).orderStatus) {
+            if ((eventData as ExecutionReport).orderStatus === 'FILLED') {
                 this.relistLimitOrder(eventData as ExecutionReport);
             }
         });
     }
 
-    //todo make order type
     async relistLimitOrder(executionReport: ExecutionReport) {
         const { symbol, orderId, side } = executionReport;
         const forPosition = this.getPositionOrderPlacedIn(orderId);
@@ -144,25 +141,25 @@ export default class Instance {
 
     async getRelistAskPrice(symbol: string, price: string, priceLastTrade?: string) : Promise<string> {
         const incomingPrice = priceLastTrade || price;
-        const increasedPrice = this.addTicks(symbol, incomingPrice, defaultTickChangeNum);
+        const increasedPrice = this.addTicks(symbol, incomingPrice, DEFAULTS.NUM_TICKS_CHANGED);
         const lowestAsk = await this.getLowestAsk(symbol);
         return Math.max(+lowestAsk, +increasedPrice).toString();
     }
 
     async getRelistBidPrice(symbol: string, price: string, priceLastTrade?: string) : Promise<string> {
         const incomingPrice = priceLastTrade || price;
-        const decreasedPrice = this.subTicks(symbol, incomingPrice, defaultTickChangeNum);
+        const decreasedPrice = this.subTicks(symbol, incomingPrice, DEFAULTS.NUM_TICKS_CHANGED);
         const highestBid = await this.getHighestBid(symbol);
         return Math.min(+highestBid, +decreasedPrice).toString();
     }
 
-    addTicks(symbol: string, price: string, numTicks = defaultTickChangeNum) {
+    addTicks(symbol: string, price: string, numTicks = DEFAULTS.NUM_TICKS_CHANGED) {
         const tickSize = this.exchangeInfo.getTickSize(symbol);
         const increaseAmount = Calc.mul(tickSize, numTicks);
         return Calc.add(price, increaseAmount);
     }
 
-    subTicks(symbol: string, price: string, numTicks = defaultTickChangeNum) {
+    subTicks(symbol: string, price: string, numTicks = DEFAULTS.NUM_TICKS_CHANGED) {
         const tickSize = this.exchangeInfo.getTickSize(symbol);
         const decreaseAmount = Calc.mul(tickSize, numTicks);
         return Calc.sub(price, decreaseAmount);

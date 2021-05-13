@@ -11,7 +11,6 @@ class App {
 
     async init() {
         await this.instance.init();
-        console.log('App initialized');
     }
 
 
