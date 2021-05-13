@@ -2,9 +2,9 @@ import { ExecutionReport, NewOrder, OrderSide } from "us-binance-api-node";
 import { CONFIG, TradePosition } from "../constants";
 import Calc from "./Calc";
 import Instance from "./Instance";
-import { PriceController } from "./PriceController";
-import LongPriceController from "./LongPriceController";
-import ShortPriceController from "./ShortPriceController";
+import { PriceController } from "./PriceController/PriceController";
+import LongPriceController from "./PriceController/LongPriceController";
+import ShortPriceController from "./PriceController/ShortPriceController";
 
 class OrderHandler {
 
