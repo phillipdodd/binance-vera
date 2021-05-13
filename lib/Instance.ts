@@ -1,11 +1,11 @@
 import 'dotenv/config'
 
-import SimplifiedExchangeInfo from "./SimplifiedExchangeInfo";
 
 const Binance = require("us-binance-api-node");
-import { ExecutionReport, OutboundAccountInfo } from "us-binance-api-node";
-import { User, TradePosition, CONFIG, DEFAULTS } from "../constants"
+import { User, TradePosition, DEFAULTS } from "../constants"
 import OrderHandler from './OrderHandler';
+import SimplifiedExchangeInfo from "./SimplifiedExchangeInfo";
+import WebsocketManager from './WebsocketManager';
 
 class Instance {
     
@@ -13,9 +13,9 @@ class Instance {
     public readonly exchangeInfo: SimplifiedExchangeInfo;
     
     public orderHandler: OrderHandler;
-    
+
     private tradePosition: TradePosition;
-    private websocketClosers: Map<string, Function>;
+    private websocketManager: WebsocketManager;
 
     constructor(user: User) {
         this.client = Binance.default({
@@ -26,13 +26,12 @@ class Instance {
 
         this.tradePosition = DEFAULTS.TRADE_POSITION;
 
-        this.websocketClosers = new Map();
-        this.exchangeInfo = new SimplifiedExchangeInfo(this.client);
+        this.exchangeInfo = new SimplifiedExchangeInfo(this);
         this.orderHandler = new OrderHandler(this);
+        this.websocketManager = new WebsocketManager(this);
     }
 
     async init(): Promise<boolean> {
-        await this.startWebsocket();
         await this.exchangeInfo.init();
 
         console.log("Instance initialized");
@@ -49,35 +48,6 @@ class Instance {
 
     getTradePosition(): TradePosition {
         return this.tradePosition;
-    }
-
-    async startWebsocket(): Promise<void> {
-        const userCallback = (eventData: OutboundAccountInfo | ExecutionReport) => {
-            // if ((eventData as ExecutionReport).orderStatus === 'FILLED') {
-            //     this.relistLimitOrder(eventData as ExecutionReport);
-            // }
-        };
-        const userWebsocketCloser = await this.client.ws.user(userCallback);
-        this.websocketClosers.set('user', userWebsocketCloser);
-    }
-
-    closeAllWebsockets() {
-        this.websocketClosers.forEach(ws => ws());
-        this.websocketClosers.clear();
-    }
-
-    getWebsocketCloserCount(): number {
-        return this.websocketClosers.size;
-    }
-
-    createTimerForOrder(symbol: string, orderId: number) {
-        setTimeout(async () => {
-            const forState = this.activeOrders.get(orderId);
-            if (forState) {
-                await this.client.cancelOrder({ symbol, orderId });
-                await this.placeInitOrder(symbol, forState);
-            }
-        }, CONFIG.RELIST_TIME);
     }
 
     async getOpenOrders(symbol: string) {
