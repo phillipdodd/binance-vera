@@ -1,7 +1,7 @@
 import math, { BigNumber } from 'mathjs';
-import { CONFIG } from "../constants";
+import { DEFAULTS } from "../constants";
 export default class Calc {
-    static add(x: any, y: any, toFixedValue = CONFIG.DEFAULT_TO_FIXED) {
+    static add(x: any, y: any, toFixedValue = DEFAULTS.TO_FIXED_PRECISION) {
         try {
             [x, y] = this.convertToBigNumbers(x, y);
             let result = (x as BigNumber).add(y).toFixed(toFixedValue).valueOf();
@@ -11,7 +11,7 @@ export default class Calc {
         }
     }
 
-    static sub(x: any, y: any, toFixedValue = CONFIG.DEFAULT_TO_FIXED) {
+    static sub(x: any, y: any, toFixedValue = DEFAULTS.TO_FIXED_PRECISION) {
         try {
             [x, y] = this.convertToBigNumbers(x, y);
             let result = (x as BigNumber).sub(y).toFixed(toFixedValue).valueOf();
@@ -21,7 +21,7 @@ export default class Calc {
         }
     }
 
-    static mul(x: any, y: any, toFixedValue = CONFIG.DEFAULT_TO_FIXED) {
+    static mul(x: any, y: any, toFixedValue = DEFAULTS.TO_FIXED_PRECISION) {
         try {
             [x, y] = this.convertToBigNumbers(x, y);
             let result = (x as BigNumber).mul(y).toFixed(toFixedValue).valueOf();
@@ -31,7 +31,7 @@ export default class Calc {
         }
     }
 
-    static div(x: any, y: any, toFixedValue = CONFIG.DEFAULT_TO_FIXED) {
+    static div(x: any, y: any, toFixedValue = DEFAULTS.TO_FIXED_PRECISION) {
         try {
             [x, y] = this.convertToBigNumbers(x, y);
             let result = (x as BigNumber).dividedBy(y).toFixed(toFixedValue).valueOf();
@@ -41,7 +41,7 @@ export default class Calc {
         }
     }
 
-    static increaseByPercentage(decimal: any, percentage: any, toFixedValue = CONFIG.DEFAULT_TO_FIXED) {
+    static increaseByPercentage(decimal: any, percentage: any, toFixedValue = DEFAULTS.TO_FIXED_PRECISION) {
         try {
             [decimal, percentage] = this.convertToBigNumbers(decimal, percentage);
             let result = (decimal as BigNumber).mul(percentage).toFixed(toFixedValue).valueOf();
@@ -51,7 +51,7 @@ export default class Calc {
         }
     }
 
-    static decreaseByPercentage(decimal: any, percentage: any, toFixedValue = CONFIG.DEFAULT_TO_FIXED) {
+    static decreaseByPercentage(decimal: any, percentage: any, toFixedValue = DEFAULTS.TO_FIXED_PRECISION) {
         try {
             [decimal, percentage] = this.convertToBigNumbers(decimal, percentage);
             let result = (decimal as BigNumber).dividedBy(percentage).toFixed(toFixedValue).valueOf();
