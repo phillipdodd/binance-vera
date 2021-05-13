@@ -1,9 +1,5 @@
 import { ExecutionReport, OrderSide } from "us-binance-api-node";
 import Instance from "./Instance";
-
-
-
-
 abstract class PriceController {
     constructor(protected instance: Instance) { }
     
