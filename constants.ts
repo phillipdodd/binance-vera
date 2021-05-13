@@ -1,16 +1,16 @@
 export enum User {
-    Phil,
-    Tom,
+    Phil = "PHIL",
+    Tom = "TOM",
 }
 
 export enum TradePosition {
-    Long,
-    Short,
+    Long = "Long",
+    Short = "Short",
 };
 
 export enum TradeSide {
-    BUY,
-    SELL,
+    Buy = "BUY",
+    Sell = "SELL",
 };
 
 export const CONFIG = {
