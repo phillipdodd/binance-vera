@@ -17,7 +17,7 @@ export default class Instance {
     private priceControllers: Map<TradePosition, PriceController>;
     private exchangeInfo: SimplifiedExchangeInfo;
     private activeOrders: Map<number, TradePosition>;
-    private websockets: Map<string, WebSocket>;
+    private websocketClosers: Map<string, Function>;
 
     constructor(user: User) {
         this.client = Binance.default({
@@ -35,7 +35,7 @@ export default class Instance {
 
         // {orderId: stateName}
         this.activeOrders = new Map();
-        this.websockets = new Map();
+        this.websocketClosers = new Map();
     }
 
     async init(): Promise<boolean> {
@@ -60,8 +60,12 @@ export default class Instance {
             //     this.relistLimitOrder(eventData as ExecutionReport);
             // }
         };
-        const userWebsocket = await this.client.ws.user(userCallback);
-        this.websockets.set('user', userWebsocket);
+        const userWebsocketCloser = await this.client.ws.user(userCallback);
+        this.websocketClosers.set('user', userWebsocketCloser);
+    }
+
+    closeAllWebsockets() {
+        this.websocketClosers.forEach(ws => ws());
     }
 
     async relistLimitOrder(executionReport: ExecutionReport) {
