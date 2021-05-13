@@ -66,6 +66,11 @@ export default class Instance {
 
     closeAllWebsockets() {
         this.websocketClosers.forEach(ws => ws());
+        this.websocketClosers.clear();
+    }
+
+    getWebsocketCloserCount(): number {
+        return this.websocketClosers.size;
     }
 
     async relistLimitOrder(executionReport: ExecutionReport) {
