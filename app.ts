@@ -12,9 +12,10 @@ class App {
     async init() {
         await this.instance.init();
     }
-
-
 }
 
 const app = new App(User.Phil);
-app.init();
+(async () => {
+    await app.init();
+    app.instance.closeAllWebsockets();
+})()
