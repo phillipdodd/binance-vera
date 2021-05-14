@@ -33,6 +33,7 @@ class Instance {
 
     async init(): Promise<boolean> {
         await this.exchangeInfo.init();
+        await this.websocketManager.startUserWebsocket();
 
         console.log("Instance initialized");
         return true;
