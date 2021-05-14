@@ -11,10 +11,15 @@ class WebsocketManager {
     }
     
     async startUserWebsocket(): Promise<void> {
+        const isExecutionReport = (eventData: OutboundAccountInfo | ExecutionReport) : eventData is ExecutionReport => {
+            return (eventData as any).orderStatus !== undefined;
+        }
+
         const userCallback = (eventData: OutboundAccountInfo | ExecutionReport) => {
-            if ((eventData as ExecutionReport).orderStatus === 'FILLED') {
-                // this.relistLimitOrder(eventData as ExecutionReport);
-                //? could this fire an event...?
+            if (isExecutionReport(eventData)) {
+                if (eventData.orderStatus === 'FILLED') {
+                    //* yay no more yelling
+                }
             }
         }
 
@@ -31,6 +36,5 @@ class WebsocketManager {
         return this.websocketClosers.size;
     }
 }
-
 
 export default WebsocketManager;
