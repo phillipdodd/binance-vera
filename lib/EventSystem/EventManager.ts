@@ -10,7 +10,14 @@ class EventManager {
      }
     
     public subscribe(eventType: EventType, listener: EventListener) {
+        if (!this.listeners.has(eventType)) {
+            this.listeners.set(eventType, new Set());
+        }
         this.listeners.get(eventType)?.add(listener);
+    }
+
+    public hasSubscriber(eventType: EventType, listener: EventListener) {
+        return this.listeners.get(eventType)?.has(listener);
     }
 
     public unsubscribe(eventType: EventType, listener: EventListener) {
