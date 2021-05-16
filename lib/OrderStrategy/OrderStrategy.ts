@@ -12,7 +12,7 @@ abstract class OrderStrategy {
         this.instance = instance;
     }
 
-    protected async getOrderOptions(executionReport: ExecutionReport): Promise<NewOrder> {
+    public async getOrderOptions(executionReport: ExecutionReport): Promise<NewOrder> {
         const symbol = executionReport.symbol;
         const type = <OrderType>'LIMIT';
         const price = await this.getPrice(executionReport);
