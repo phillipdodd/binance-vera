@@ -12,5 +12,9 @@
   "devDependencies": {
     "dotenv": "^9.0.1",
     "jest": "^26.6.3"
+  },
+  "dependencies": {
+    "mathjs": "^9.3.2",
+    "us-binance-api-node": "^0.9.10"
   }
 }
