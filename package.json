@@ -2,7 +2,7 @@
   "name": "vera",
   "version": "1.0.0",
   "description": "",
-  "main": "app.js",
+  "main": "dist/app.js",
   "scripts": {
     "test": "jest --detectOpenHandles",
     "build": "tsc",
@@ -27,6 +27,7 @@
   },
   "dependencies": {
     "mathjs": "^9.3.2",
-    "us-binance-api-node": "0.9.10"
+    "us-binance-api-node": "0.9.10",
+    "winston": "^3.3.3"
   }
 }
