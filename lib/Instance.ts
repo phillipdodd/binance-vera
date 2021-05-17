@@ -2,30 +2,34 @@ import 'dotenv/config'
 
 
 const Binance = require("us-binance-api-node");
-import { User, TradePosition, DEFAULTS } from "../constants"
+import { User, DEFAULTS } from "../constants"
+import EventManager from './EventSystem/EventManager';
 import OrderHandler from './OrderHandler';
 import SimplifiedExchangeInfo from "./SimplifiedExchangeInfo";
 import WebsocketManager from './WebsocketManager';
 
 class Instance {
     
+    public readonly user: User;
     public readonly client;
+    public readonly events;
     public readonly exchangeInfo: SimplifiedExchangeInfo;
     
     public orderHandler: OrderHandler;
 
-    private tradePosition: TradePosition;
     private websocketManager: WebsocketManager;
 
+
     constructor(user: User) {
+        this.user = user;
+
         this.client = Binance.default({
             apiKey: process.env[`API_KEY_${user}`],
             apiSecret: process.env[`API_SECRET_${user}`],
             getTime: Date.now,
         });
 
-        this.tradePosition = DEFAULTS.TRADE_POSITION;
-
+        this.events = new EventManager();
         this.exchangeInfo = new SimplifiedExchangeInfo(this);
         this.orderHandler = new OrderHandler(this);
         this.websocketManager = new WebsocketManager(this);
@@ -37,18 +41,6 @@ class Instance {
 
         console.log("Instance initialized");
         return true;
-    }
-
-    toggleTradePosition() {
-        if (this.tradePosition === TradePosition.Long) {
-            this.tradePosition = TradePosition.Short;
-        } else {
-            this.tradePosition = TradePosition.Long;
-        }
-    }
-
-    getTradePosition(): TradePosition {
-        return this.tradePosition;
     }
 
     async getOpenOrders(symbol: string) {

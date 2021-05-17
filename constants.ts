@@ -3,19 +3,20 @@ export enum User {
     Tom = "TOM",
 }
 
-export const InitPairs = {
-    [User.Phil]: [
-        "DOGEUSD"
-    ],
-    [User.Tom]: [
-        "DOGEUSD"
-    ]
+export const USER_CONFIG = {
+    [User.Phil]: {
+        BUY_IN: 50,
+        INIT_SYMBOLS: [
+            "DOGEUSD"
+        ]
+    },
+    [User.Tom]: {
+        BUY_IN: 50,
+        INIT_SYMBOLS: [
+            "DOGEUSD"
+        ]
+    }
 }
-
-export enum TradePosition {
-    Long = "Long",
-    Short = "Short",
-};
 
 export enum TradeSide {
     Buy = "BUY",
@@ -23,12 +24,10 @@ export enum TradeSide {
 };
 
 export const CONFIG = {
-    BUYIN: 50,
     RELIST_TIME: 60_000,
 }
 
 export const DEFAULTS = {
-    TRADE_POSITION: TradePosition.Long,
     TO_FIXED_PRECISION: 8,
     NUM_TICKS_CHANGED: 3
 }

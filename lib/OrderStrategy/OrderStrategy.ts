@@ -1,5 +1,5 @@
 import { ExecutionReport, NewOrder, OrderSide, OrderType } from "us-binance-api-node";
-import { CONFIG } from "../../constants";
+import { CONFIG, User, USER_CONFIG } from "../../constants";
 import Calc from "../Calc";
 import Instance from "../Instance";
 
@@ -73,7 +73,7 @@ abstract class OrderStrategy {
     }
 
     private getStartQuantity(price: string): string {
-        return Calc.div(CONFIG.BUYIN, price).toString();
+        return Calc.div(USER_CONFIG[this.instance.user].BUY_IN, price).toString();
     }
 
     protected getSide(executionReport: ExecutionReport): OrderSide {
