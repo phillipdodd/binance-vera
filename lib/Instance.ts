@@ -1,9 +1,11 @@
 import 'dotenv/config'
+import winston from 'winston';
 
 
 const Binance = require("us-binance-api-node");
 import { User, DEFAULTS } from "../constants"
 import EventManager from './EventSystem/EventManager';
+import LogManager from './LogManager';
 import OrderHandler from './OrderHandler';
 import SimplifiedExchangeInfo from "./SimplifiedExchangeInfo";
 import WebsocketManager from './WebsocketManager';
@@ -14,7 +16,10 @@ class Instance {
     public readonly client;
     public readonly events;
     public readonly exchangeInfo: SimplifiedExchangeInfo;
-    
+
+    private logManager: LogManager;
+    public readonly logger: winston.Logger;
+
     public orderHandler: OrderHandler;
 
     private websocketManager: WebsocketManager;
@@ -30,6 +35,8 @@ class Instance {
         });
 
         this.events = new EventManager();
+        this.logManager = new LogManager(this);
+        this.logger = this.logManager.logger;
         this.exchangeInfo = new SimplifiedExchangeInfo(this);
         this.orderHandler = new OrderHandler(this);
         this.websocketManager = new WebsocketManager(this);
@@ -39,7 +46,7 @@ class Instance {
         await this.exchangeInfo.init();
         await this.websocketManager.startUserWebsocket();
 
-        console.log("Instance initialized");
+        this.events.notify("AppInitialized", null);
         return true;
     }
 
