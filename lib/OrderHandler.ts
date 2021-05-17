@@ -5,6 +5,7 @@ import EventType from "./EventSystem/EventType";
 import Instance from "./Instance";
 import LongStrategy from "./OrderStrategy/LongStrategy";
 import OrderStrategy from "./OrderStrategy/OrderStrategy";
+import ShortStrategy from "./OrderStrategy/ShortStrategy";
 
 class OrderHandler implements EventListener {
 
@@ -18,6 +19,7 @@ class OrderHandler implements EventListener {
         this.instance.events.subscribe("OrderFilled", this);
         
         this.orderStrategy = new LongStrategy(instance);
+        // this.orderStrategy = new ShortStrategy(instance);
     }
     
     public setStrategy(orderStrategy: OrderStrategy) {
@@ -42,12 +44,20 @@ class OrderHandler implements EventListener {
     private async handleAppInitialized() {
         const initSymbols = USER_CONFIG[this.instance.user].INIT_SYMBOLS;
         for (const symbol of initSymbols) {
-            await this.initOrder(symbol);
+            try {
+                await this.initOrder(symbol);
+            } catch (error) {
+                this.instance.logger.error(`initOrder - ${symbol} - ${error.message}`);
+            }
         }
     }
 
     private async handleOrderFilled(executionReport: ExecutionReport) {
-        await this.relistOrder(executionReport);
+        try {
+            await this.relistOrder(executionReport);
+        } catch (error) {
+            this.instance.logger.error(`handleOrderFilled - ${executionReport.symbol} ${executionReport.orderId} - ${error.message}`);
+        }
     }
 
     private async initOrder(symbol: string) {
@@ -61,9 +71,14 @@ class OrderHandler implements EventListener {
     }
 
     private async placeOrder(orderOptions: NewOrder) {
-        const orderResponse = await this.instance.client.order(orderOptions);
-        this.instance.events.notify("OrderPlaced", orderResponse);
-        return orderResponse;
+        try {
+            const orderResponse = await this.instance.client.order(orderOptions);
+            this.instance.events.notify("OrderPlaced", orderResponse);
+            return orderResponse;
+        } catch (error) {
+            this.instance.logger.error(`placeOrder - ${JSON.stringify(orderOptions)}`);
+            throw error;
+        }
     }
 
     private async cancelOrder(symbol: string, orderId: number): Promise<any> {
