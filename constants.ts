@@ -3,6 +3,15 @@ export enum User {
     Tom = "TOM",
 }
 
+export const InitPairs = {
+    [User.Phil]: [
+        "DOGEUSD"
+    ],
+    [User.Tom]: [
+        "DOGEUSD"
+    ]
+}
+
 export enum TradePosition {
     Long = "Long",
     Short = "Short",
