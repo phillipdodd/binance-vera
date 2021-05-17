@@ -18,7 +18,7 @@ class WebsocketManager {
         const userCallback = (eventData: OutboundAccountInfo | ExecutionReport) => {
             if (isExecutionReport(eventData)) {
                 if (eventData.orderStatus === 'FILLED') {
-                    //* yay no more yelling
+                    this.instance.events.notify("OrderFilled", eventData);
                 }
             }
         }
