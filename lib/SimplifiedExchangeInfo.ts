@@ -52,6 +52,13 @@ export default class SimplifiedExchangeInfo {
         }
         return this.simplifiedExchangeInfo.get(symbol)?.stepSize;
     }
+
+    getMinNotional(symbol: string) {
+        if (!this.isValidSymbol(symbol)) {
+            throw new Error(`Input error: ${symbol} is an invalid symbol`);
+        }
+        return this.simplifiedExchangeInfo.get(symbol)?.minNotional;
+    }
 }
 
 function simplifyExchangeInfo(symbol: Symbol) {
