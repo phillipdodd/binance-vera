@@ -1,5 +1,5 @@
 import { ExecutionReport, NewOrder, OrderSide, OrderType } from "us-binance-api-node";
-import { CONFIG, User, USER_CONFIG } from "../../constants";
+import { USER_CONFIG } from "../../constants";
 import Calc from "../Calc";
 import Instance from "../Instance";
 
@@ -12,6 +12,8 @@ abstract class OrderStrategy {
         this.instance = instance;
     }
 
+    //todo needs  check for min notional somewhere
+    
     public async getInitialOrderOptions(symbol: string): Promise<NewOrder> {
         const type = <OrderType>'LIMIT';
         const price = await this.getStartPrice(symbol);
@@ -73,7 +75,8 @@ abstract class OrderStrategy {
     }
 
     private getStartQuantity(price: string): string {
-        return Calc.div(USER_CONFIG[this.instance.user].BUY_IN, price).toString();
+        const buyIn = USER_CONFIG[this.instance.user].BUY_IN;
+        return Calc.div(buyIn, price).toString();
     }
 
     protected getSide(executionReport: ExecutionReport): OrderSide {
