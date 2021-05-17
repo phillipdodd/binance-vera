@@ -1,4 +1,4 @@
-import math, { BigNumber } from 'mathjs';
+import { BigNumber, bignumber } from 'mathjs';
 import { DEFAULTS } from "../constants";
 export default class Calc {
     static add(x: any, y: any, toFixedValue = DEFAULTS.TO_FIXED_PRECISION) {
@@ -91,7 +91,7 @@ export default class Calc {
     static convertToBigNumbers(...args: any) {
         try {
             return [...args].map((value) => {
-                return math.bignumber(value);
+                return bignumber(value);
             });
         } catch (err) {
             throw err;
