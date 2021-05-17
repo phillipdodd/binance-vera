@@ -24,8 +24,8 @@ class ShortStrategy extends OrderStrategy {
         return Math.min(+highestBid, +decreasedPrice).toString();
     }
 
-    protected async getStartPrice(executionReport: ExecutionReport): Promise<string> {
-        return await this.instance.getLowestAsk(executionReport.symbol);
+    protected async getStartPrice(symbol: string): Promise<string> {
+        return await this.instance.getLowestAsk(symbol);
     }
 
     private subTicks(symbol: string, price: string) {

@@ -1,6 +1,4 @@
 import { ExecutionReport, NewOrder, OrderSide } from "us-binance-api-node";
-import { TradePosition } from "../constants";
-import Calc from "./Calc";
 import Instance from "./Instance";
 import LongStrategy from "./OrderStrategy/LongStrategy";
 import OrderStrategy from "./OrderStrategy/OrderStrategy";
@@ -19,12 +17,14 @@ class OrderHandler {
         this.orderStrategy = orderStrategy;
     }
 
-    private async initOrder() {
-
+    private async initOrder(symbol: string) {
+        const orderOptions: NewOrder = await this.orderStrategy.getInitialOrderOptions(symbol);
+        const orderResponse = await this.instance.client.order(orderOptions);
+        return orderResponse;
     }
 
-    private async placeOrder(executionReport: ExecutionReport): Promise<any> {
-        const orderOptions: NewOrder = await this.orderStrategy.getOrderOptions(executionReport);
+    private async relistOrder(executionReport: ExecutionReport): Promise<any> {
+        const orderOptions: NewOrder = await this.orderStrategy.getRelistOrderOptions(executionReport);
         const orderResponse = await this.instance.client.order(orderOptions);
         return orderResponse;
     }

@@ -24,8 +24,8 @@ class LongStrategy extends OrderStrategy {
         return Math.max(+lowestAsk, +increasedPrice).toString();
     }
 
-    protected async getStartPrice(executionReport: ExecutionReport): Promise<string> {
-        return await this.instance.getHighestBid(executionReport.symbol);
+    protected async getStartPrice(symbol: string): Promise<string> {
+        return await this.instance.getHighestBid(symbol);
     }
 
     private addTicks(symbol: string, price: string) {

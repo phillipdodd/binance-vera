@@ -12,7 +12,18 @@ abstract class OrderStrategy {
         this.instance = instance;
     }
 
-    public async getOrderOptions(executionReport: ExecutionReport): Promise<NewOrder> {
+    public async getInitialOrderOptions(symbol: string): Promise<NewOrder> {
+        const type = <OrderType>'LIMIT';
+        const price = await this.getStartPrice(symbol);
+        const quantity = this.getStartQuantity(price);
+        const side = this.startSide;
+
+        return this.correctTickAndStep(({
+            symbol, type, price, quantity, side
+        } as NewOrder));
+    }
+
+    public async getRelistOrderOptions(executionReport: ExecutionReport): Promise<NewOrder> {
         const symbol = executionReport.symbol;
         const type = <OrderType>'LIMIT';
         const price = await this.getPrice(executionReport);
@@ -24,6 +35,7 @@ abstract class OrderStrategy {
         } as NewOrder));
     }
     
+    //todo remove this, combine with price and quantity functions
     protected correctTickAndStep(options: NewOrder) {
         //* Market orders will not be including a 'price' property
         if (options.hasOwnProperty("price")) {
@@ -41,12 +53,12 @@ abstract class OrderStrategy {
         if (executionReport.side === this.startSide) {
             return await this.getRelistPrice(executionReport);
         } else {
-            return await this.getStartPrice(executionReport);
+            return await this.getStartPrice(executionReport.symbol);
         }
     }
 
     protected abstract getRelistPrice(executionReport: ExecutionReport): Promise<string>;
-    protected abstract getStartPrice(executionReport: ExecutionReport): Promise<string>;
+    protected abstract getStartPrice(symbol: string): Promise<string>;
 
     protected getQuantity(executionReport: ExecutionReport, price: string) : string {
         if (executionReport.side === this.startSide) {
