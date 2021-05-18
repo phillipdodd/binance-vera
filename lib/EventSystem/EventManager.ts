@@ -1,11 +1,14 @@
+import Instance from "../Instance";
 import EventType from "./EventType";
 import EventListener from "./EventListener";
 
 class EventManager {
 
+    private instance: Instance;
     private listeners: Map<EventType, Set<EventListener>>;
 
-    constructor() {
+    constructor(instance: Instance) {
+        this.instance = instance;
         this.listeners = new Map();
      }
     
@@ -25,10 +28,20 @@ class EventManager {
     }
 
     public notify(eventType: EventType, data: any) {
+        this.logEvent(eventType, data)
         const listenerSet = this.listeners.get(eventType);
         listenerSet?.forEach(listener => {
             listener.update(eventType, data);
         });
+    }
+    
+    private logEvent(eventType: EventType, data: any) {
+        if (data && typeof data === "object") {
+            this.instance.logger.debug(`Event: ${eventType} - `);
+            this.instance.logger.debug(data);
+        } else {
+            this.instance.logger.debug(`Event: ${eventType} - ${data || "null"}`);
+        }
     }
 }
 
