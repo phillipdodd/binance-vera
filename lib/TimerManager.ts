@@ -1,51 +1,72 @@
-import { TradePosition, TradeSide } from "../constants";
+import { OrderSide } from "us-binance-api-node";
+import { CONFIG } from "../constants";
+import EventListener from "./EventSystem/EventListener";
+import EventType from "./EventSystem/EventType";
 import Instance from "./Instance";
+import OrderHandler from "./OrderHandler";
 
-//todo change language of 'state' to 'tradeposition'
-export default class TimerManager {
+export default class TimerManager implements EventListener {
 
     private instance: Instance;
     private activeTimers: Map<string, NodeJS.Timeout>;
+    private orderHandler: OrderHandler;
 
-    private resetTime: number;
-    private positionChangeTime: number;
-
-    constructor(instance: Instance) {
+    constructor(instance: Instance, orderHandler: OrderHandler) {
         this.instance = instance;
+        this.orderHandler = orderHandler;
+
+        this.instance.events.subscribe("OrderPlaced", this);
+        this.instance.events.subscribe("OrderFilled", this);
+
         this.activeTimers = new Map();
-
-        this.resetTime = 60_000;
-        this.positionChangeTime = 120_000;
     }
 
-    //todo get rid of if statements using a dict or something
-    public shouldCreateRelistTimer(tradePosition: TradePosition, side: TradeSide): boolean {
-        if (tradePosition === TradePosition.Long && side === TradeSide.Buy) {
-            return true;
+    public update(eventType: EventType, data: any): void {
+        switch (eventType) {
+            case "OrderPlaced":
+                this.onOrderPlaced(data);
+                break;
+    
+            case "OrderFilled":
+                this.onOrderFilled(data);
+                break;
+        
+            default:
+                break;
         }
-        if (tradePosition === TradePosition.Short && side === TradeSide.Sell) {
-            return true;
+    }
+    
+    //! 'orderId' and 'side'
+    private onOrderPlaced(data: {side: OrderSide, orderId: string}) {
+        const orderStrategy = this.orderHandler.getStrategy();
+        if (data.side === orderStrategy.startSide) {
+            this.createResetTimer(data.orderId);
+        } else {
+            this.createChangeStrategyTimer(data.orderId);
         }
-        return false;
     }
 
-    public createResetTimer(orderId: string): void {
+    private onOrderFilled(orderId: string) {
+        this.deleteTimer(orderId);
+    }
+
+    public createResetTimer(orderId: string) {
         const timer = setTimeout(() => {
+            this.instance.events.notify("OrderShouldCancel", orderId);
             this.activeTimers.delete(orderId);
-            //todo reset order
-        }, this.positionChangeTime);
+        }, CONFIG.RESET_TIME);
         this.activeTimers.set(orderId, timer);
     }
 
-    public createPositionChangeTimer(orderId: string): void {
+    public createChangeStrategyTimer(orderId: string) {
         const timer = setTimeout(() => {
-            this.instance.toggleTradePosition();
+            this.instance.events.notify("StrategyShouldChange", null);
             this.activeTimers.delete(orderId);
-        }, this.positionChangeTime);
+        }, CONFIG.CHANGE_STRATEGY_TIME);
         this.activeTimers.set(orderId, timer);
     }
 
-    public deleteTimer(orderId: string): void {
+    public deleteTimer(orderId: string) {
         const timeout = this.activeTimers.get(orderId);
         if (timeout) {
             clearTimeout(timeout);
