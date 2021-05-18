@@ -35,19 +35,19 @@ class OrderHandler implements EventListener {
     public update(eventType: EventType, data: any): void {
         switch (eventType) {
             case "AppInitialized":
-                this.handleAppInitialized()
+                this.onAppInitialized()
                 break;
             
             case "OrderFilled":
-                this.handleOrderFilled(data);
+                this.onOrderFilled(data);
                 break;
             
             case "OrderShouldCancel":
-                this.handleOrderShouldCancel(data);
+                this.onOrderShouldCancel(data);
                 break;
             
             case "StrategyShouldChange":
-                this.handleStrategyShouldChange();
+                this.onStrategyShouldChange();
                 break;
         
             default:
@@ -55,7 +55,7 @@ class OrderHandler implements EventListener {
         }
     }
 
-    private async handleAppInitialized() {
+    private async onAppInitialized() {
         const initSymbols = USER_CONFIG[this.instance.user].INIT_SYMBOLS;
         for (const symbol of initSymbols) {
             try {
@@ -66,7 +66,7 @@ class OrderHandler implements EventListener {
         }
     }
 
-    private async handleOrderFilled(executionReport: ExecutionReport) {
+    private async onOrderFilled(executionReport: ExecutionReport) {
         try {
             await this.relistOrder(executionReport);
         } catch (error) {
@@ -74,11 +74,11 @@ class OrderHandler implements EventListener {
         }
     }
 
-    private async handleOrderShouldCancel(data: {symbol: string, orderId: string | number}) {
+    private async onOrderShouldCancel(data: {symbol: string, orderId: string | number}) {
         await this.cancelOrder(data.symbol, data.orderId);
     }
 
-    private async handleStrategyShouldChange() {
+    private async onStrategyShouldChange() {
         if (this.orderStrategy instanceof LongStrategy) {
             this.setStrategy(new ShortStrategy(this.instance));
         } else {
@@ -109,8 +109,8 @@ class OrderHandler implements EventListener {
     }
 
     private async cancelOrder(symbol: string, orderId: string | number): Promise<any> {
-        const cancelledOrder = await this.instance.client.cancelOrder({ symbol, orderId: <number>orderId });
-        this.instance.events.notify("OrderCancelled", cancelledOrder);
+        await this.instance.client.cancelOrder({ symbol, orderId: <number>orderId });
+        this.instance.events.notify("OrderCancelled", orderId);
     }
 
 }
