@@ -17,6 +17,7 @@ export default class TimerManager implements EventListener {
 
         this.instance.events.subscribe("OrderPlaced", this);
         this.instance.events.subscribe("OrderFilled", this);
+        this.instance.events.subscribe("OrderCancelled", this);
 
         this.activeTimers = new Map();
     }
@@ -30,13 +31,16 @@ export default class TimerManager implements EventListener {
             case "OrderFilled":
                 this.onOrderFilled(data);
                 break;
-        
+            
+            case "OrderCancelled":
+                this.deleteTimer(data);
+                break;
+            
             default:
                 break;
         }
     }
     
-    //! 'orderId' and 'side'
     private onOrderPlaced(data: {side: OrderSide, orderId: string}) {
         const orderStrategy = this.orderHandler.getStrategy();
         if (data.side === orderStrategy.startSide) {
@@ -53,7 +57,6 @@ export default class TimerManager implements EventListener {
     public createResetTimer(orderId: string) {
         const timer = setTimeout(() => {
             this.instance.events.notify("OrderShouldCancel", orderId);
-            this.activeTimers.delete(orderId);
         }, CONFIG.RESET_TIME);
         this.activeTimers.set(orderId, timer);
     }
@@ -61,7 +64,7 @@ export default class TimerManager implements EventListener {
     public createChangeStrategyTimer(orderId: string) {
         const timer = setTimeout(() => {
             this.instance.events.notify("StrategyShouldChange", null);
-            this.activeTimers.delete(orderId);
+            this.deleteTimer(orderId);
         }, CONFIG.CHANGE_STRATEGY_TIME);
         this.activeTimers.set(orderId, timer);
     }
