@@ -17,9 +17,15 @@ class OrderHandler implements EventListener {
 
         this.instance.events.subscribe("AppInitialized", this);
         this.instance.events.subscribe("OrderFilled", this);
+        this.instance.events.subscribe("OrderShouldCancel", this);
+        this.instance.events.subscribe("StrategyShouldChange", this);
         
         this.orderStrategy = new LongStrategy(instance);
         // this.orderStrategy = new ShortStrategy(instance);
+    }
+
+    public getStrategy(): OrderStrategy {
+        return this.orderStrategy;
     }
     
     public setStrategy(orderStrategy: OrderStrategy) {
@@ -34,6 +40,14 @@ class OrderHandler implements EventListener {
             
             case "OrderFilled":
                 this.handleOrderFilled(data);
+                break;
+            
+            case "OrderShouldCancel":
+                this.handleOrderShouldCancel(data);
+                break;
+            
+            case "StrategyShouldChange":
+                this.handleStrategyShouldChange();
                 break;
         
             default:
@@ -60,6 +74,19 @@ class OrderHandler implements EventListener {
         }
     }
 
+    private async handleOrderShouldCancel(data: {symbol: string, orderId: string | number}) {
+        await this.cancelOrder(data.symbol, data.orderId);
+    }
+
+    private async handleStrategyShouldChange() {
+        if (this.orderStrategy instanceof LongStrategy) {
+            this.setStrategy(new ShortStrategy(this.instance));
+        } else {
+            this.setStrategy(new LongStrategy(this.instance));
+        }
+        this.instance.events.notify("StrategyDidChange", this.orderStrategy);
+    }
+
     private async initOrder(symbol: string) {
         const orderOptions: NewOrder = await this.orderStrategy.getInitialOrderOptions(symbol);
         await this.placeOrder(orderOptions);
@@ -81,8 +108,9 @@ class OrderHandler implements EventListener {
         }
     }
 
-    private async cancelOrder(symbol: string, orderId: number): Promise<any> {
-        await this.instance.client.cancelOrder({ symbol, orderId });
+    private async cancelOrder(symbol: string, orderId: string | number): Promise<any> {
+        const cancelledOrder = await this.instance.client.cancelOrder({ symbol, orderId: <number>orderId });
+        this.instance.events.notify("OrderCancelled", cancelledOrder);
     }
 
 }
