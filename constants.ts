@@ -24,7 +24,8 @@ export enum TradeSide {
 };
 
 export const CONFIG = {
-    RELIST_TIME: 60_000,
+    RESET_TIME: 60_000,
+    CHANGE_STRATEGY_TIME: 240_000,
 }
 
 export const DEFAULTS = {
