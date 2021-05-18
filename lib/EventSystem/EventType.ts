@@ -1,10 +1,10 @@
 type EventType =
     "AppInitialized" |
-    "OrderPlaced" | // needs to pass along the used strategy as well
-    "OrderFilled" |
-    "StrategyShouldChange" |
+    "OrderPlaced" |             //? wants: side, orderId, needs to pass along the used strategy as well
+    "OrderFilled" |             //? wants: orderId
+    "StrategyShouldChange" | 
     "StrategyDidChange" |
-    "OrderShouldCancel" |
+    "OrderShouldCancel" |       //? data = orderId: string
     "OrderCancelled"
     ;
 
