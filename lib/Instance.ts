@@ -34,7 +34,7 @@ class Instance {
             getTime: Date.now,
         });
 
-        this.events = new EventManager();
+        this.events = new EventManager(this);
         this.logManager = new LogManager(this);
         this.logger = this.logManager.logger;
         this.exchangeInfo = new SimplifiedExchangeInfo(this);
