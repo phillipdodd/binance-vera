@@ -4,6 +4,7 @@ import winston from 'winston';
 
 const Binance = require("us-binance-api-node");
 import { User, DEFAULTS } from "../constants"
+import AppInitialized from './Events/AppInitialized';
 import EventManager from './EventSystem/EventManager';
 import LogManager from './LogManager';
 import OrderHandler from './OrderHandler';
@@ -46,7 +47,7 @@ class Instance {
         await this.exchangeInfo.init();
         await this.websocketManager.startUserWebsocket();
 
-        this.events.notify("AppInitialized", null);
+        this.events.notify(new AppInitialized());
         return true;
     }
 

@@ -1,7 +1,14 @@
 import { ExecutionReport, NewOrder } from "us-binance-api-node";
 import { USER_CONFIG } from "../constants";
+import AppInitialized from "./Events/AppInitialized";
+import Event from "./Events/Event";
+import OrderCancelled from "./Events/OrderCancelled";
+import OrderFilled from "./Events/OrderFilled";
+import OrderPlaced from "./Events/OrderPlaced";
+import OrderShouldCancel from "./Events/OrderShouldCancel";
+import StrategyDidChange from "./Events/StrategyDidChange";
+import StrategyShouldChange from "./Events/StrategyShouldChange";
 import EventListener from "./EventSystem/EventListener";
-import EventType from "./EventSystem/EventType";
 import Instance from "./Instance";
 import LongStrategy from "./OrderStrategy/LongStrategy";
 import OrderStrategy from "./OrderStrategy/OrderStrategy";
@@ -15,12 +22,14 @@ class OrderHandler implements EventListener {
     constructor(instance: Instance) {
         this.instance = instance;
 
-        this.instance.events.subscribe("AppInitialized", this);
-        this.instance.events.subscribe("OrderFilled", this);
-        this.instance.events.subscribe("OrderShouldCancel", this);
-        this.instance.events.subscribe("StrategyShouldChange", this);
-        
         this.orderStrategy = new LongStrategy(instance);
+        
+        this.instance.events.subscribe(new AppInitialized(), this);
+        this.instance.events.subscribe(new OrderFilled(0), this);
+        this.instance.events.subscribe(new OrderShouldCancel(0), this);
+        this.instance.events.subscribe(new StrategyShouldChange(this.orderStrategy), this);
+        
+        
         // this.orderStrategy = new ShortStrategy(instance);
     }
 
@@ -32,22 +41,22 @@ class OrderHandler implements EventListener {
         this.orderStrategy = orderStrategy;
     }
 
-    public update(eventType: EventType, data: any): void {
-        switch (eventType) {
+    public update(event: Event): void {
+        switch (event.name) {
             case "AppInitialized":
                 this.onAppInitialized()
                 break;
             
             case "OrderFilled":
-                this.onOrderFilled(data);
+                this.onOrderFilled(event.args);
                 break;
             
             case "OrderShouldCancel":
-                this.onOrderShouldCancel(data);
+                this.onOrderShouldCancel(event.args);
                 break;
             
             case "StrategyShouldChange":
-                this.onStrategyShouldChange();
+                this.onStrategyShouldChange((event.args) as OrderStrategy);
                 break;
         
             default:
@@ -78,13 +87,9 @@ class OrderHandler implements EventListener {
         await this.cancelOrder(data.symbol, data.orderId);
     }
 
-    private async onStrategyShouldChange() {
-        if (this.orderStrategy instanceof LongStrategy) {
-            this.setStrategy(new ShortStrategy(this.instance));
-        } else {
-            this.setStrategy(new LongStrategy(this.instance));
-        }
-        this.instance.events.notify("StrategyDidChange", this.orderStrategy);
+    private async onStrategyShouldChange(strategy: OrderStrategy) {
+        this.setStrategy(strategy);
+        this.instance.events.notify(new StrategyDidChange(this.orderStrategy));
     }
 
     private async initOrder(symbol: string) {
@@ -100,7 +105,7 @@ class OrderHandler implements EventListener {
     private async placeOrder(orderOptions: NewOrder) {
         try {
             const orderResponse = await this.instance.client.order(orderOptions);
-            this.instance.events.notify("OrderPlaced", orderResponse);
+            this.instance.events.notify(new OrderPlaced(orderResponse));
             return orderResponse;
         } catch (error) {
             this.instance.logger.error(`placeOrder - ${JSON.stringify(orderOptions)}`);
@@ -110,7 +115,7 @@ class OrderHandler implements EventListener {
 
     private async cancelOrder(symbol: string, orderId: string | number): Promise<any> {
         await this.instance.client.cancelOrder({ symbol, orderId: <number>orderId });
-        this.instance.events.notify("OrderCancelled", orderId);
+        this.instance.events.notify(new OrderCancelled(orderId));
     }
 
 }
