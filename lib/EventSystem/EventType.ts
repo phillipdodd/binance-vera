@@ -4,7 +4,7 @@ type EventType =
     "OrderFilled" |             //? wants: orderId
     "StrategyShouldChange" | 
     "StrategyDidChange" |
-    "OrderShouldCancel" |       //? data = orderId: string
+    "OrderShouldCancel" |       //? sends: orderId
     "OrderCancelled"
     ;
 
