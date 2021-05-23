@@ -1,16 +1,25 @@
-import Instance from "../Instance";
 import EventType from "./EventType";
 import EventListener from "./EventListener";
+import LogManager from "../LogManager";
+import winston from "winston";
 
 class EventManager {
 
-    private instance: Instance;
     private listeners: Map<EventType, Set<EventListener>>;
+    private logger: winston.Logger = LogManager.getLogger();
 
-    constructor(instance: Instance) {
-        this.instance = instance;
+    static instance: EventManager;
+
+    constructor() {
         this.listeners = new Map();
-     }
+    }
+
+    public static getEventManager() {
+        if (this.instance === undefined) {
+            this.instance = new EventManager();
+        }
+        return this.instance;
+    }
     
     public subscribe(eventType: EventType, listener: EventListener) {
         if (!this.listeners.has(eventType)) {
@@ -27,7 +36,8 @@ class EventManager {
         this.listeners.get(eventType)?.delete(listener);
     }
 
-    public notify(eventType: EventType, data: any) {
+    //todo could this be a static method to get rid of this. references in emitting classes?
+    public notify(eventType: EventType, data?: any) {
         this.logEvent(eventType, data)
         const listenerSet = this.listeners.get(eventType);
         listenerSet?.forEach(listener => {
@@ -37,10 +47,10 @@ class EventManager {
     
     private logEvent(eventType: EventType, data: any) {
         if (data && typeof data === "object") {
-            this.instance.logger.debug(`Event: ${eventType} - `);
-            this.instance.logger.debug(data);
+            this.logger.debug(`Event: ${eventType} - `);
+            this.logger.debug(data);
         } else {
-            this.instance.logger.debug(`Event: ${eventType} - ${data || "null"}`);
+            this.logger.debug(`Event: ${eventType} - ${data || "null"}`);
         }
     }
 }
