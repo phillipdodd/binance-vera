@@ -1,15 +1,19 @@
 import { ExecutionReport, NewOrder, OrderSide, OrderType } from "us-binance-api-node";
 import { USER_CONFIG } from "../../constants";
+import BinanceMarketplace from "../BinanceMarketplace";
 import Calc from "../Calc";
-import Instance from "../Instance";
+import SimplifiedExchangeInfo from "../SimplifiedExchangeInfo";
 
 abstract class OrderStrategy {
 
-    protected instance: Instance;
+    protected binance: BinanceMarketplace;
+    protected exchangeInfo: SimplifiedExchangeInfo;
+
     abstract startSide: OrderSide;
 
-    constructor(instance: Instance) {
-        this.instance = instance;
+    constructor(binance: BinanceMarketplace, exchangeInfo: SimplifiedExchangeInfo) {
+        this.binance = binance;
+        this.exchangeInfo = exchangeInfo;
     }
 
     //todo needs  check for min notional somewhere
@@ -41,11 +45,11 @@ abstract class OrderStrategy {
     protected correctTickAndStep(options: NewOrder) {
         //* Market orders will not be including a 'price' property
         if (options.hasOwnProperty("price")) {
-            options.price = Calc.roundToTickSize(options.price, this.instance.exchangeInfo.getTickSize(options.symbol));
+            options.price = Calc.roundToTickSize(options.price, this.exchangeInfo.getTickSize(options.symbol));
         }
 
         if (options.hasOwnProperty("quantity")) {
-            options.quantity = Calc.roundToStepSize(options.quantity, this.instance.exchangeInfo.getStepSize(options.symbol));
+            options.quantity = Calc.roundToStepSize(options.quantity, this.exchangeInfo.getStepSize(options.symbol));
         }
 
         return options;
@@ -75,7 +79,7 @@ abstract class OrderStrategy {
     }
 
     private getStartQuantity(price: string): string {
-        const buyIn = USER_CONFIG[this.instance.user].BUY_IN;
+        const buyIn = USER_CONFIG[this.binance.user].BUY_IN;
         return Calc.div(buyIn, price).toString();
     }
 

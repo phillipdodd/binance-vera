@@ -1,5 +1,5 @@
 import { ExchangeInfo, Symbol } from "us-binance-api-node";
-import Instance from "./Instance";
+import BinanceMarketplace from "./BinanceMarketplace";
 
 interface SimplifiedSymbol {
     "baseAsset": string;
@@ -13,11 +13,11 @@ interface SimplifiedSymbol {
 
 export default class SimplifiedExchangeInfo {
     
-    private instance: Instance;
+    private binance: BinanceMarketplace;
     private simplifiedExchangeInfo!: Map<string, SimplifiedSymbol>;
     
-    constructor(instance: Instance) {
-        this.instance = instance;
+    constructor(binance: BinanceMarketplace) {
+        this.binance = binance;
     }
 
     async init() {
@@ -25,7 +25,8 @@ export default class SimplifiedExchangeInfo {
     }
 
     async getSimplifiedExchangeInfo(): Promise<Map<string, SimplifiedSymbol>> {
-        let exchangeInfo: ExchangeInfo = await this.instance.client.exchangeInfo();
+        //todo this shouldn't access client
+        let exchangeInfo: ExchangeInfo = await this.binance.client.exchangeInfo();
         let simplifiedExchangeInfo = new Map<string, SimplifiedSymbol>();
         
         exchangeInfo.symbols.forEach((symbol: Symbol) => {
