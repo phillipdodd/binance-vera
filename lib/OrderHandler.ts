@@ -1,27 +1,37 @@
 import { ExecutionReport, NewOrder } from "us-binance-api-node";
+import winston from "winston";
 import { USER_CONFIG } from "../constants";
+import BinanceMarketplace from "./BinanceMarketplace";
 import EventListener from "./EventSystem/EventListener";
+import EventManager from "./EventSystem/EventManager";
 import EventType from "./EventSystem/EventType";
-import Instance from "./Instance";
+import LogManager from "./LogManager";
 import LongStrategy from "./OrderStrategy/LongStrategy";
 import OrderStrategy from "./OrderStrategy/OrderStrategy";
 import ShortStrategy from "./OrderStrategy/ShortStrategy";
+import SimplifiedExchangeInfo from "./SimplifiedExchangeInfo";
 
 class OrderHandler implements EventListener {
 
-    private instance: Instance;
+    private binance: BinanceMarketplace;
+    private exchangeInfo: SimplifiedExchangeInfo;
+    private events: EventManager = EventManager.getEventManager();
+    private logger: winston.Logger;
     private orderStrategy: OrderStrategy;
 
-    constructor(instance: Instance) {
-        this.instance = instance;
+    constructor(binance: BinanceMarketplace, exchangeInfo: SimplifiedExchangeInfo) {
+        this.binance = binance;
+        this.exchangeInfo = exchangeInfo;
 
-        this.instance.events.subscribe("AppInitialized", this);
-        this.instance.events.subscribe("OrderFilled", this);
-        this.instance.events.subscribe("OrderShouldCancel", this);
-        this.instance.events.subscribe("StrategyShouldChange", this);
+        this.events.subscribe("AppInitialized", this);
+        this.events.subscribe("OrderFilled", this);
+        this.events.subscribe("OrderShouldCancel", this);
+        this.events.subscribe("StrategyShouldChange", this);
         
-        this.orderStrategy = new LongStrategy(instance);
-        // this.orderStrategy = new ShortStrategy(instance);
+        this.logger = LogManager.getLogger();
+
+        this.orderStrategy = new LongStrategy(binance, exchangeInfo);
+        // this.orderStrategy = new ShortStrategy(binance, exchangeInfo);
     }
 
     public getStrategy(): OrderStrategy {
@@ -56,12 +66,12 @@ class OrderHandler implements EventListener {
     }
 
     private async onAppInitialized() {
-        const initSymbols = USER_CONFIG[this.instance.user].INIT_SYMBOLS;
+        const initSymbols = USER_CONFIG[this.binance.user].INIT_SYMBOLS;
         for (const symbol of initSymbols) {
             try {
                 await this.initOrder(symbol);
             } catch (error) {
-                this.instance.logger.error(`initOrder - ${symbol} - ${error.message}`);
+                this.logger.error(`initOrder - ${symbol} - ${error.message}`);
             }
         }
     }
@@ -70,7 +80,7 @@ class OrderHandler implements EventListener {
         try {
             await this.relistOrder(executionReport);
         } catch (error) {
-            this.instance.logger.error(`handleOrderFilled - ${executionReport.symbol} ${executionReport.orderId} - ${error.message}`);
+            this.logger.error(`handleOrderFilled - ${executionReport.symbol} ${executionReport.orderId} - ${error.message}`);
         }
     }
 
@@ -80,11 +90,11 @@ class OrderHandler implements EventListener {
 
     private async onStrategyShouldChange() {
         if (this.orderStrategy instanceof LongStrategy) {
-            this.setStrategy(new ShortStrategy(this.instance));
+            this.setStrategy(new ShortStrategy(this.binance, this.exchangeInfo));
         } else {
-            this.setStrategy(new LongStrategy(this.instance));
+            this.setStrategy(new LongStrategy(this.binance, this.exchangeInfo));
         }
-        this.instance.events.notify("StrategyDidChange", this.orderStrategy);
+        this.events.notify("StrategyDidChange", this.orderStrategy);
     }
 
     private async initOrder(symbol: string) {
@@ -97,20 +107,22 @@ class OrderHandler implements EventListener {
         await this.placeOrder(orderOptions);
     }
 
+    //todo this shouldn't have to access the client prop
     private async placeOrder(orderOptions: NewOrder) {
         try {
-            const orderResponse = await this.instance.client.order(orderOptions);
-            this.instance.events.notify("OrderPlaced", orderResponse);
+            const orderResponse = await this.binance.client.order(orderOptions);
+            this.events.notify("OrderPlaced", orderResponse);
             return orderResponse;
         } catch (error) {
-            this.instance.logger.error(`placeOrder - ${JSON.stringify(orderOptions)}`);
+            this.logger.error(`placeOrder - ${JSON.stringify(orderOptions)}`);
             throw error;
         }
     }
-
+    
+    //todo this shouldn't have to access the client prop
     private async cancelOrder(symbol: string, orderId: string | number): Promise<any> {
-        await this.instance.client.cancelOrder({ symbol, orderId: <number>orderId });
-        this.instance.events.notify("OrderCancelled", orderId);
+        await this.binance.client.cancelOrder({ symbol, orderId: <number>orderId });
+        this.events.notify("OrderCancelled", orderId);
     }
 
 }

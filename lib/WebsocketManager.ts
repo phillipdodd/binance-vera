@@ -1,12 +1,14 @@
 import { ExecutionReport, OutboundAccountInfo } from "us-binance-api-node";
-import Instance from "./Instance";
+import BinanceMarketplace from "./BinanceMarketplace";
+import EventManager from "./EventSystem/EventManager";
 
 class WebsocketManager {
-    private instance: Instance;
+    private binance: BinanceMarketplace;
     private websocketClosers: Map<string, Function>;
+    private events: EventManager = EventManager.getEventManager();
     
-    constructor(instance: Instance) {
-        this.instance = instance;
+    constructor(binance: BinanceMarketplace) {
+        this.binance = binance;
         this.websocketClosers = new Map();
     }
     
@@ -18,12 +20,12 @@ class WebsocketManager {
         const userCallback = (eventData: OutboundAccountInfo | ExecutionReport) => {
             if (isExecutionReport(eventData)) {
                 if (eventData.orderStatus === 'FILLED') {
-                    this.instance.events.notify("OrderFilled", eventData);
+                    this.events.notify("OrderFilled", eventData);
                 }
             }
         }
 
-        const userWebsocketCloser = await this.instance.client.ws.user(userCallback);
+        const userWebsocketCloser = await this.binance.client.ws.user(userCallback);
         this.websocketClosers.set('user', userWebsocketCloser);
     }
 
