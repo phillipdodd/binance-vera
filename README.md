@@ -1,3 +1,5 @@
+# Auto Binance Trading
+
 # Potential Packages
 
 -   [Tulind](https://www.npmjs.com/package/tulind)
@@ -5,7 +7,7 @@
 -   [nedb-models](https://www.npmjs.com/package/nedb-models) or [nedb-promises](https://www.npmjs.com/package/nedb-promises)
     -   flat file db
 
-# Flow
+# Flow (outdated?)
 
 - App.init
     - Instance.init
