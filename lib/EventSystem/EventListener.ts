@@ -1,7 +1,7 @@
-import EventType from "./EventType";
+import Event from "../Events/Event";
 
 interface EventListener {
-    update(eventType: EventType, data: any): void;
+    update(event: Event): void;
 }
 
 export default EventListener;

@@ -3,7 +3,8 @@ import winston from 'winston';
 
 
 const Binance = require("us-binance-api-node");
-import { User } from "../constants"
+import { User, DEFAULTS } from "../constants"
+import AppInitialized from './Events/AppInitialized';
 import EventManager from './EventSystem/EventManager';
 import LogManager from './LogManager';
 import OrderHandler from './OrderHandler';
@@ -24,6 +25,7 @@ class Instance {
 
     private websocketManager: WebsocketManager;
 
+
     constructor(user: User) {
         this.user = user;
 
@@ -33,19 +35,19 @@ class Instance {
             getTime: Date.now,
         });
 
-        this.events = new EventManager();
-        this.logManager = new LogManager();
+        this.events = new EventManager(this);
+        this.logManager = new LogManager(this);
         this.logger = this.logManager.logger;
-        this.exchangeInfo = new SimplifiedExchangeInfo(this.client);
-        this.websocketManager = new WebsocketManager(this.client);
-        this.orderHandler = new OrderHandler(this.client, this.exchangeInfo);
+        this.exchangeInfo = new SimplifiedExchangeInfo(this);
+        this.orderHandler = new OrderHandler(this);
+        this.websocketManager = new WebsocketManager(this);
     }
 
     async init(): Promise<boolean> {
         await this.exchangeInfo.init();
         await this.websocketManager.startUserWebsocket();
 
-        this.events.notify("AppInitialized", null);
+        this.events.notify(new AppInitialized());
         return true;
     }
 

@@ -1,17 +1,14 @@
+import EventListener from "./EventSystem/EventListener";
+import EventManager from "./EventSystem/EventManager";
+import Instance from "./Instance";
 import WinstonLogger from "./WinstonLogger";
 
 class LogManager {
-
     public logger = WinstonLogger;
-    static instance: LogManager;
+    private instance: Instance;
 
-    constructor() {}
-
-    public static getLogger() {
-        if (this.instance === undefined) {
-            this.instance = new LogManager();
-        }
-        return this.instance.logger;
+    constructor(instance: Instance) {
+        this.instance = instance;
     }
 }
 

@@ -1,16 +1,15 @@
 import { ExecutionReport, OrderSide } from "us-binance-api-node";
 import { DEFAULTS } from "../../constants";
-import BinanceMarketplace from "../BinanceMarketplace";
 import Calc from "../Calc";
-import SimplifiedExchangeInfo from "../SimplifiedExchangeInfo";
+import Instance from "../Instance";
 import OrderStrategy from "./OrderStrategy";
 
 class ShortStrategy extends OrderStrategy {
 
     startSide: OrderSide;
 
-    constructor(binance: BinanceMarketplace, exchangeInfo: SimplifiedExchangeInfo) {
-        super(binance, exchangeInfo);
+    constructor(instance: Instance) {
+        super(instance);
         this.startSide = "SELL";
     }
 
@@ -20,17 +19,17 @@ class ShortStrategy extends OrderStrategy {
         const incomingPrice = priceLastTrade || price;
         const decreasedPrice = this.subTicks(symbol, incomingPrice);
 
-        const highestBid = await this.binance.getHighestBid(symbol);
+        const highestBid = await this.instance.getHighestBid(symbol);
 
         return Math.min(+highestBid, +decreasedPrice).toString();
     }
 
     protected async getStartPrice(symbol: string): Promise<string> {
-        return await this.binance.getLowestAsk(symbol);
+        return await this.instance.getLowestAsk(symbol);
     }
 
     private subTicks(symbol: string, price: string) {
-        const tickSize = this.exchangeInfo.getTickSize(symbol);
+        const tickSize = this.instance.exchangeInfo.getTickSize(symbol);
         const decreaseAmount = Calc.mul(tickSize, DEFAULTS.NUM_TICKS_CHANGED);
         return Calc.sub(price, decreaseAmount);
     }

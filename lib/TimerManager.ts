@@ -1,5 +1,6 @@
 import { OrderSide } from "us-binance-api-node";
 import { CONFIG } from "../constants";
+import OrderPlaced from "./Events/OrderPlaced";
 import EventListener from "./EventSystem/EventListener";
 import EventType from "./EventSystem/EventType";
 import Instance from "./Instance";
@@ -15,7 +16,7 @@ export default class TimerManager implements EventListener {
         this.instance = instance;
         this.orderHandler = orderHandler;
 
-        this.instance.events.subscribe("OrderPlaced", this);
+        this.instance.events.subscribe(new OrderPlaced(), this);
         this.instance.events.subscribe("OrderFilled", this);
         this.instance.events.subscribe("OrderCancelled", this);
 
