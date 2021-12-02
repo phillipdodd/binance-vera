@@ -25,7 +25,6 @@ class Instance {
 
     private websocketManager: WebsocketManager;
 
-
     constructor(user: User) {
         this.user = user;
 
@@ -35,9 +34,9 @@ class Instance {
             getTime: Date.now,
         });
 
-        this.events = new EventManager(this);
         this.logManager = new LogManager(this);
         this.logger = this.logManager.logger;
+        this.events = new EventManager(this.logger);
         this.exchangeInfo = new SimplifiedExchangeInfo(this);
         this.orderHandler = new OrderHandler(this);
         this.websocketManager = new WebsocketManager(this);
