@@ -1,14 +1,15 @@
 import Instance from "../Instance";
 import EventListener from "./EventListener";
 import Event from "../Events/Event";
+import winston from "winston";
 
 class EventManager {
 
-    private instance: Instance;
+    private logger: winston.Logger;
     private listeners: Map<string, Set<EventListener>>;
 
-    constructor(instance: Instance) {
-        this.instance = instance;
+    constructor(logger: winston.Logger) {
+        this.logger = logger;
         this.listeners = new Map();
      }
     
@@ -37,10 +38,10 @@ class EventManager {
     
     private logEvent(event: Event) {
         if (event.args && typeof event.args === "object") {
-            this.instance.logger.debug(`Event: ${event.name} - `);
-            this.instance.logger.debug(event.args);
+            this.logger.debug(`Event: ${event.name} - `);
+            this.logger.debug(event.args);
         } else {
-            this.instance.logger.debug(`Event: ${event.name} - ${event.args || "null"}`);
+            this.logger.debug(`Event: ${event.name} - ${event.args || "null"}`);
         }
     }
 }
