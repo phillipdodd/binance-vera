@@ -1,15 +1,15 @@
-import Instance from "../Instance";
 import EventListener from "./EventListener";
 import Event from "../Events/Event";
 import winston from "winston";
+import WinstonLogger from "../WinstonLogger";
 
 class EventManager {
 
     private logger: winston.Logger;
     private listeners: Map<string, Set<EventListener>>;
 
-    constructor(logger: winston.Logger) {
-        this.logger = logger;
+    constructor() {
+        this.logger = WinstonLogger;
         this.listeners = new Map();
      }
     
