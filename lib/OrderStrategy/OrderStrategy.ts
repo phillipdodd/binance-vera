@@ -1,15 +1,18 @@
 import { ExecutionReport, NewOrder, OrderSide, OrderType } from "us-binance-api-node";
-import { USER_CONFIG } from "../../constants";
+import { User, USER_CONFIG } from "../../constants";
+import BinanceMarketplace from "../BinanceMarketplace";
 import Calc from "../Calc";
-import Instance from "../Instance";
+import Instance from "../maybe not used/Instance";
+import SimplifiedExchangeInfo from "../SimplifiedExchangeInfo";
 
 abstract class OrderStrategy {
 
-    protected instance: Instance;
+    protected marketplace: BinanceMarketplace;
+
     abstract startSide: OrderSide;
 
-    constructor(instance: Instance) {
-        this.instance = instance;
+    constructor(marketplace: BinanceMarketplace) {
+        this.marketplace = marketplace;
     }
 
     //todo needs  check for min notional somewhere
@@ -20,9 +23,9 @@ abstract class OrderStrategy {
         const quantity = this.getStartQuantity(price);
         const side = this.startSide;
 
-        return this.correctTickAndStep(({
+        return {
             symbol, type, price, quantity, side
-        } as NewOrder));
+        } as NewOrder;
     }
 
     public async getRelistOrderOptions(executionReport: ExecutionReport): Promise<NewOrder> {
@@ -32,42 +35,48 @@ abstract class OrderStrategy {
         const quantity = this.getQuantity(executionReport, price);
         const side = this.getSide(executionReport);
 
-        return this.correctTickAndStep(({
+        return {
             symbol, type, price, quantity, side
-        } as NewOrder));
+        } as NewOrder;
     }
     
     //todo remove this, combine with price and quantity functions
     protected correctTickAndStep(options: NewOrder) {
-        //* Market orders will not be including a 'price' property
-        if (options.hasOwnProperty("price")) {
-            options.price = Calc.roundToTickSize(options.price, this.instance.exchangeInfo.getTickSize(options.symbol));
-        }
 
         if (options.hasOwnProperty("quantity")) {
-            options.quantity = Calc.roundToStepSize(options.quantity, this.instance.exchangeInfo.getStepSize(options.symbol));
+            options.quantity = Calc.roundToStepSize(options.quantity, this.marketplace.exchangeInfo.getStepSize(options.symbol));
         }
 
         return options;
     }
 
     protected async getPrice(executionReport: ExecutionReport) : Promise<string> {
+        const tickSize = this.marketplace.exchangeInfo.getTickSize(executionReport.symbol);
+        
+        let price;
         if (executionReport.side === this.startSide) {
-            return await this.getRelistPrice(executionReport);
+            price = await this.getRelistPrice(executionReport);
         } else {
-            return await this.getStartPrice(executionReport.symbol);
+            price = await this.getStartPrice(executionReport.symbol);
         }
+
+        return Calc.roundToTickSize(price, tickSize);
     }
 
     protected abstract getRelistPrice(executionReport: ExecutionReport): Promise<string>;
     protected abstract getStartPrice(symbol: string): Promise<string>;
 
-    protected getQuantity(executionReport: ExecutionReport, price: string) : string {
+    protected getQuantity(executionReport: ExecutionReport, price: string): string {
+        const stepSize = this.marketplace.exchangeInfo.getStepSize(executionReport.symbol);
+
+        let quantity;
         if (executionReport.side === this.startSide) {
-            return this.getRelistQuantity(executionReport);
+            quantity = this.getRelistQuantity(executionReport);
         } else {
-            return this.getStartQuantity(price);
+            quantity = this.getStartQuantity(price);
         }
+
+        return Calc.roundToStepSize(quantity, stepSize)
     }
 
     private getRelistQuantity(executionReport: ExecutionReport): string {
@@ -75,7 +84,7 @@ abstract class OrderStrategy {
     }
 
     private getStartQuantity(price: string): string {
-        const buyIn = USER_CONFIG[this.instance.user].BUY_IN;
+        const buyIn = USER_CONFIG[this.marketplace.user].BUY_IN;
         return Calc.div(buyIn, price).toString();
     }
 
