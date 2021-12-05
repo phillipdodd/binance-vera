@@ -1,5 +1,6 @@
 import { ExecutionReport, OutboundAccountInfo } from "us-binance-api-node";
-import Instance from "./Instance";
+import OrderFilled from "./Events/OrderFilled";
+import Instance from "./maybe not used/Instance";
 
 class WebsocketManager {
     private instance: Instance;
@@ -18,7 +19,8 @@ class WebsocketManager {
         const userCallback = (eventData: OutboundAccountInfo | ExecutionReport) => {
             if (isExecutionReport(eventData)) {
                 if (eventData.orderStatus === 'FILLED') {
-                    this.instance.events.notify("OrderFilled", eventData);
+                    const orderFilledEvent = new OrderFilled(eventData);
+                    this.instance.events.notify(orderFilledEvent);
                 }
             }
         }
