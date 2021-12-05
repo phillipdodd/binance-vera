@@ -1,12 +1,16 @@
-import { NewOrder } from "us-binance-api-node";
+import { Order } from "us-binance-api-node";
 import Event from "./Event";
+
+type OrderPlacedArgs = {
+    order: Order
+}
 
 class OrderPlaced implements Event {
     public readonly name: string = "OrderPlaced"
-    public readonly args: any;
+    public readonly args: OrderPlacedArgs;
 
-    constructor(order: NewOrder) {
-        this.args = order;
+    constructor(order: Order) {
+        this.args = { order };
     }
 }
 
