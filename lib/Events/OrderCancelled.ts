@@ -1,11 +1,18 @@
+import { CancelOrderResult } from "us-binance-api-node";
 import Event from "./Event";
 
+type OrderCancelledArgs = {
+    cancelOrderResult: CancelOrderResult
+}
+
+
+//todo this should be named OrderDidCancel
 class OrderCancelled implements Event {
     public readonly name: string = "OrderCancelled"
-    public readonly args: any;
+    public readonly args: OrderCancelledArgs;
 
-    constructor(orderId: string | number) {
-        this.args = orderId;
+    constructor(cancelOrderResult: CancelOrderResult) {
+        this.args = { cancelOrderResult };
     }
 }
 
