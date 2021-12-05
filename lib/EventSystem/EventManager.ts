@@ -13,11 +13,11 @@ class EventManager {
         this.listeners = new Map();
      }
     
-    public subscribe(event: Event, listener: EventListener) {
-        if (!this.listeners.has(event.name)) {
-            this.listeners.set(event.name, new Set());
+    public subscribe(eventName: string, listener: EventListener) {
+        if (!this.listeners.has(eventName)) {
+            this.listeners.set(eventName, new Set());
         }
-        this.listeners.get(event.name)?.add(listener);
+        this.listeners.get(eventName)?.add(listener);
     }
 
     public hasSubscriber(event: Event, listener: EventListener) {
