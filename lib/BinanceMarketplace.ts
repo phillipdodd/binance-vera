@@ -2,6 +2,8 @@ import { Binance, CancelOrderResult, ExecutionReport, NewOrder, OutboundAccountI
 import { User } from "../constants";
 import OrderFilled from "./Events/OrderFilled";
 import EventManager from "./EventSystem/EventManager";
+import LongStrategy from "./OrderStrategy/LongStrategy";
+import OrderStrategy from "./OrderStrategy/OrderStrategy";
 import SimplifiedExchangeInfo from "./SimplifiedExchangeInfo";
 const binance = require("us-binance-api-node");
 
@@ -14,11 +16,11 @@ class BinanceMarketplace {
     public exchangeInfo: SimplifiedExchangeInfo;
 
     private websocketClosers: Map<string, Function> = new Map();
+    private orderStrategy: OrderStrategy;
 
     constructor(user: User, events: EventManager) {
         this.user = user;
         this.events = events;
-        
         this.exchangeInfo = new SimplifiedExchangeInfo(this);
 
         this.client = binance.default({
@@ -26,6 +28,8 @@ class BinanceMarketplace {
             apiSecret: process.env[`API_SECRET_${user}`],
             getTime: Date.now,
         });
+
+        this.orderStrategy = new LongStrategy(this);
     }
 
     async getOpenOrders(symbol: string) {
@@ -59,6 +63,20 @@ class BinanceMarketplace {
     public async cancelOrder(symbol: string, orderId: string | number): Promise<CancelOrderResult> {
         const cancelOrderResult = await this.client.cancelOrder({ symbol, orderId: <number>orderId });
         return cancelOrderResult;
+    }
+
+    public async initOrder(symbol: string) {
+        const orderOptions: NewOrder = await this.orderStrategy.getInitialOrderOptions(symbol);
+        await this.placeOrder(orderOptions);
+    }
+
+    public async relistOrder(executionReport: ExecutionReport) {
+        const orderOptions: NewOrder = await this.orderStrategy.getRelistOrderOptions(executionReport);
+        await this.placeOrder(orderOptions);
+    }
+
+    public setStrategy(orderStrategy: OrderStrategy) {
+        this.orderStrategy = orderStrategy;
     }
 
     async startUserWebsocket(): Promise<void> {

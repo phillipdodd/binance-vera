@@ -5,9 +5,6 @@ import BinanceMarketplace from "./lib/BinanceMarketplace";
 import Event from "./lib/Events/Event";
 import EventListener from "./lib/EventSystem/EventListener";
 import EventManager from "./lib/EventSystem/EventManager";
-import OrderHandler from "./lib/OrderHandler";
-import { ExecutionReport } from "us-binance-api-node";
-import OrderStrategy from "./lib/OrderStrategy/OrderStrategy";
 import StrategyShouldChange from "./lib/Events/StrategyShouldChange";
 import OrderShouldCancel from "./lib/Events/OrderShouldCancel";
 import OrderFilled from "./lib/Events/OrderFilled";
@@ -19,7 +16,6 @@ class App implements EventListener {
 
     private user: User;
     private marketplace: BinanceMarketplace;
-    private orderHandler: OrderHandler;
 
     private eventHandlers: Map<String, Function> = new Map();
 
@@ -28,7 +24,6 @@ class App implements EventListener {
         this.logger = WinstonLogger;
         this.user = user;
         this.marketplace = new BinanceMarketplace(user, this.events);
-        this.orderHandler = new OrderHandler(this.marketplace);
 
         this.eventHandlers.set("AppInitialized", this.onAppInitialized)
         this.eventHandlers.set("OrderFilled", this.onOrderFilled)
@@ -48,7 +43,7 @@ class App implements EventListener {
         console.log('in testing mode! onAppInitialized() triggered')
         for (const symbol of initSymbols) {
             try {
-                // await this.orderHandler.initOrder(symbol);
+                // await this.marketplace.initOrder(symbol);
             } catch (error) {
                 this.logger.error(`initOrder - ${symbol} - ${(error as Error).message}`);
             }
@@ -58,7 +53,7 @@ class App implements EventListener {
     private async onOrderFilled(event: OrderFilled) {
         const { executionReport } = event.args;
         try {
-            await this.orderHandler.relistOrder(executionReport);
+            await this.marketplace.relistOrder(executionReport);
         } catch (error) {
             this.logger.error(`handleOrderFilled - ${executionReport.symbol} ${executionReport.orderId} - ${(error as Error).message}`);
         }
@@ -74,10 +69,6 @@ class App implements EventListener {
 
     private async onStrategyShouldChange(event: StrategyShouldChange) {
         const { targetStrategy } = event.args;
-        this.orderHandler.setStrategy(targetStrategy);
+        this.marketplace.setStrategy(targetStrategy);
     }
 }
-
-
-
-
