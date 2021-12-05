@@ -1,5 +1,6 @@
 import { Binance, CancelOrderResult, ExecutionReport, NewOrder, OutboundAccountInfo } from "us-binance-api-node";
 import { User } from "../constants";
+import AppInitialized from "./Events/AppInitialized";
 import OrderFilled from "./Events/OrderFilled";
 import EventManager from "./EventSystem/EventManager";
 import LongStrategy from "./OrderStrategy/LongStrategy";
@@ -30,6 +31,12 @@ class BinanceMarketplace {
         });
 
         this.orderStrategy = new LongStrategy(this);
+
+    }
+    
+    async init() {
+        await this.exchangeInfo.init();
+        this.events.notify(new AppInitialized());
     }
 
     async getOpenOrders(symbol: string) {
