@@ -1,10 +1,10 @@
 import { OrderSide } from "us-binance-api-node";
-import { CONFIG } from "../constants";
-import OrderPlaced from "./Events/OrderPlaced";
-import EventListener from "./EventSystem/EventListener";
-import EventType from "./EventSystem/EventType";
+import { CONFIG } from "../../constants";
+import OrderPlaced from "../Events/OrderPlaced";
+import EventListener from "../EventSystem/EventListener";
+import EventType from "../EventSystem/EventType";
 import Instance from "./Instance";
-import OrderHandler from "./OrderHandler";
+import OrderHandler from "../OrderHandler";
 
 export default class TimerManager implements EventListener {
 
