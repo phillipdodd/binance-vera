@@ -1,9 +1,7 @@
 import { ExecutionReport, NewOrder, OrderSide, OrderType } from "us-binance-api-node";
-import { User, USER_CONFIG } from "../../constants";
+import { USER_CONFIG } from "../../constants";
 import BinanceMarketplace from "../BinanceMarketplace";
 import Calc from "../Calc";
-import Instance from "../maybe not used/Instance";
-import SimplifiedExchangeInfo from "../SimplifiedExchangeInfo";
 
 abstract class OrderStrategy {
 
@@ -38,16 +36,6 @@ abstract class OrderStrategy {
         return {
             symbol, type, price, quantity, side
         } as NewOrder;
-    }
-    
-    //todo remove this, combine with price and quantity functions
-    protected correctTickAndStep(options: NewOrder) {
-
-        if (options.hasOwnProperty("quantity")) {
-            options.quantity = Calc.roundToStepSize(options.quantity, this.marketplace.exchangeInfo.getStepSize(options.symbol));
-        }
-
-        return options;
     }
 
     protected async getPrice(executionReport: ExecutionReport) : Promise<string> {
