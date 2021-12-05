@@ -2,7 +2,6 @@ import { ExecutionReport, OrderSide } from "us-binance-api-node";
 import { DEFAULTS } from "../../constants";
 import BinanceMarketplace from "../BinanceMarketplace";
 import Calc from "../Calc";
-import Instance from "../maybe not used/Instance";
 import OrderStrategy from "./OrderStrategy";
 
 class ShortStrategy extends OrderStrategy {
@@ -14,6 +13,10 @@ class ShortStrategy extends OrderStrategy {
         this.startSide = "SELL";
     }
 
+    protected async getStartPrice(symbol: string): Promise<string> {
+        return await this.marketplace.getLowestAsk(symbol);
+    }
+
     protected async getRelistPrice(executionReport: ExecutionReport): Promise<string> {
         const { symbol, priceLastTrade, price } = executionReport;
 
@@ -23,10 +26,6 @@ class ShortStrategy extends OrderStrategy {
         const highestBid = await this.marketplace.getHighestBid(symbol);
 
         return Math.min(+highestBid, +decreasedPrice).toString();
-    }
-
-    protected async getStartPrice(symbol: string): Promise<string> {
-        return await this.marketplace.getLowestAsk(symbol);
     }
 
     private subTicks(symbol: string, price: string) {
