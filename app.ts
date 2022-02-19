@@ -1,4 +1,5 @@
-import winston, { loggers } from "winston";
+import 'dotenv/config'
+import winston from "winston";
 import WinstonLogger from "./lib/WinstonLogger";
 import { User, USER_CONFIG } from "./constants";
 import BinanceMarketplace from "./lib/BinanceMarketplace";
@@ -24,6 +25,12 @@ class App implements EventListener {
         this.logger = WinstonLogger;
         this.user = user;
         this.marketplace = new BinanceMarketplace(user, this.events);
+
+        /**
+         * currently unhandled  events:
+         *  AccountBalanceUpdate
+         *  OrderCancelled
+         */
 
         this.events.subscribe("AppInitialized", this);
         this.eventHandlers.set("AppInitialized", this.onAppInitialized)
@@ -55,6 +62,7 @@ class App implements EventListener {
         console.log('in testing mode! onAppInitialized() triggered')
         for (const symbol of initSymbols) {
             try {
+                console.log(`Would be initializing symbol ${symbol}`)
                 // await this.marketplace.initOrder(symbol);
             } catch (error) {
                 this.logger.error(`initOrder - ${symbol} - ${(error as Error).message}`);
