@@ -18,7 +18,12 @@ abstract class OrderStrategy {
     public async getInitialOrderOptions(symbol: string): Promise<NewOrder> {
         const type = <OrderType>'LIMIT';
         const price = await this.getStartPrice(symbol);
-        const quantity = this.getStartQuantity(price);
+
+        //todo this needs to use getQuantity, not getStartQuantity
+        const stepSize = this.marketplace.exchangeInfo.getStepSize(symbol);
+        let quantity = this.getStartQuantity(price);
+        quantity = Calc.roundToStepSize(quantity, stepSize);
+
         const side = this.startSide;
 
         return {
@@ -30,7 +35,9 @@ abstract class OrderStrategy {
         const symbol = executionReport.symbol;
         const type = <OrderType>'LIMIT';
         const price = await this.getPrice(executionReport);
+
         const quantity = this.getQuantity(executionReport, price);
+    
         const side = this.getSide(executionReport);
 
         return {
