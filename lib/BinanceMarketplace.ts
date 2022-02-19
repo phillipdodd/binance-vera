@@ -1,10 +1,13 @@
 import { Binance, CancelOrderResult, ExecutionReport, NewOrder, OutboundAccountInfo } from "us-binance-api-node";
 import { User } from "../constants";
+import AccountBalanceUpdate from "./Events/AccountBalanceUpdate";
 import AppInitialized from "./Events/AppInitialized";
+import OrderCancelled from "./Events/OrderCancelled";
 import OrderFilled from "./Events/OrderFilled";
 import EventManager from "./EventSystem/EventManager";
 import LongStrategy from "./OrderStrategy/LongStrategy";
 import OrderStrategy from "./OrderStrategy/OrderStrategy";
+import ShortStrategy from "./OrderStrategy/ShortStrategy";
 import SimplifiedExchangeInfo from "./SimplifiedExchangeInfo";
 const binance = require("us-binance-api-node");
 
@@ -31,11 +34,13 @@ class BinanceMarketplace {
         });
 
         this.orderStrategy = new LongStrategy(this);
-
+        // this.orderStrategy = new ShortStrategy(this);
+        
     }
     
     async init() {
         await this.exchangeInfo.init();
+        await this.startUserWebsocket();
         this.events.notify(new AppInitialized());
     }
 
@@ -74,6 +79,10 @@ class BinanceMarketplace {
 
     public async initOrder(symbol: string) {
         const orderOptions: NewOrder = await this.orderStrategy.getInitialOrderOptions(symbol);
+        
+        console.log(`Attempting to place order for ${symbol}:`)
+        console.dir(orderOptions);
+        
         await this.placeOrder(orderOptions);
     }
 
@@ -93,10 +102,29 @@ class BinanceMarketplace {
 
         const userCallback = (eventData: OutboundAccountInfo | ExecutionReport) => {
             if (isExecutionReport(eventData)) {
+
+                console.log("******** ExecutionReport start ********")
+                console.dir(eventData)
+                console.log("******** ExecutionReport end ********")
+
                 if (eventData.orderStatus === 'FILLED') {
                     const orderFilledEvent = new OrderFilled(eventData);
                     this.events.notify(orderFilledEvent);
                 }
+
+                if (eventData.orderStatus === 'CANCELED') {
+                    const orderCancelledEvent = new OrderCancelled(eventData);
+                    this.events.notify(orderCancelledEvent);
+                }
+
+            } else {
+                const accountBalanceUpdate = new AccountBalanceUpdate(eventData);
+                this.events.notify(accountBalanceUpdate);
+
+                console.log("******** OutboundAccountInfo start ********")
+                console.dir(eventData)
+                console.log("******** OutboundAccountInfo end ********")
+
             }
         }
 
